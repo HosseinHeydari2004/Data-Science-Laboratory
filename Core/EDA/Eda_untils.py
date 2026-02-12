@@ -11,6 +11,7 @@ def detect_missing_values(df: pd.DataFrame):
             "Missing_value_Percentage": df.isna().mean() * 100
         }
     )
+    return missing_df
 
 
 def describe_data(df: pd.DataFrame, include: str = "all"):
@@ -19,13 +20,19 @@ def describe_data(df: pd.DataFrame, include: str = "all"):
 
 
 def unique_values_data(df: pd.DataFrame, col: str):
+    """Returns unique values"""
     return df[col].unique()
 
 
-def detect_outliers(df: pd.DataFrame, col: str)->pd.DataFrame:
+def detect_outliers(df: pd.DataFrame, col: str) -> pd.DataFrame:
+    """Returns outliers using the IQR method"""
     Q1 = df[col].quantile(0.25)
     Q3 = df[col].quantile(0.75)
     IQR = Q3 - Q1
     lower = Q1 - 1.5 * IQR
     upper = Q3 + 1.5 * IQR
     return df[(col < lower) | (col > upper)]
+
+
+def remove_missing_values(df:pd.DataFrame):
+    total = detect_missing_values(df)
