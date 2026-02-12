@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 
 
@@ -34,5 +36,23 @@ def detect_outliers(df: pd.DataFrame, col: str) -> pd.DataFrame:
     return df[(col < lower) | (col > upper)]
 
 
-def remove_missing_values(df:pd.DataFrame):
-    total = detect_missing_values(df)
+def remove_missing_values(
+        df: pd.DataFrame,
+        threshold: float = 30.0,
+        save_path: str = "C:\Users\hosse\OneDrive\Desktop\AI Source\پروژه ها و نمونه کار ها\پروژه ها+ نمونه کار ها\ml_lab\Data\processed"
+):
+    def get_high_missing_columns():
+        """
+        Returns columns with missing percentage above threshold.
+        """
+        missing_percentage = df.isna().mean() * 100
+        high_missing = missing_percentage[missing_percentage > threshold]
+
+        return high_missing
+
+    df_clean = df.dropna()
+
+    if save_path:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        df_clean.to_csv(save_path, index=False)
