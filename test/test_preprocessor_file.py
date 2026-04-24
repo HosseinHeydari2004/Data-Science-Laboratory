@@ -4,4 +4,4 @@ from Core.preprocessor import MissingValue
 data = pd.read_csv("diabetes.csv")
 
 pre = MissingValue()
-print(pre.missing_value_report(data))
+print(pre.list_columns(data))

@@ -19,5 +19,5 @@ class MissingValue:
         return data[select_columns].unique()
 
     @classmethod
-    def columns(cls, data:pd.DataFrame)->np.ndarray:
-        pass
+    def list_columns(cls, data: pd.DataFrame) -> list:
+        return list(data.columns)
