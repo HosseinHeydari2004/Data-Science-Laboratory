@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+st.set_page_config(page_title="Data Science Lab", layout="wide")
 
 st.write("# 🤖 Welcome to the Data Science and Machine Learning Laboratory!")
 st.markdown(
@@ -21,6 +23,18 @@ st.markdown(
     3. View analysis and prediction outputs in the tabs above.
     
     ---
-    ## Ready to get started? Upload your first file from the sidebar!
+    ## Ready to get started? Upload your first file from the below!
     """
 )
+uploaded_file = st.file_uploader("Select a CSV or Excel file:", type=['csv', 'xlsx'])
+if uploaded_file is not None:
+    try:
+        if uploaded_file.name.endswith(".csv"):
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = pd.read_excel(uploaded_file)
+        st.session_state['df'] = df
+        st.success("File uploaded successfully")
+    except Exception as EX:
+        st.error(f"Error reading file")
+
