@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-class MissingValue:
+class EDA:
     @classmethod
     def missing_value_report(cls, data: pd.DataFrame) -> pd.DataFrame:
         df = pd.DataFrame(
@@ -21,3 +21,7 @@ class MissingValue:
     @classmethod
     def list_columns(cls, data: pd.DataFrame) -> list:
         return list(data.columns)
+
+    @classmethod
+    def information_data(cls, data: pd.DataFrame):
+        return data.info()
