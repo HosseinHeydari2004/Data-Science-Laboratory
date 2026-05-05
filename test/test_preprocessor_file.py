@@ -1,7 +1,6 @@
 import pandas as pd
-from Core.preprocessor import MissingValue
+from Core.preprocessor import EDA
 
 data = pd.read_csv("diabetes.csv")
 
-pre = MissingValue()
-print(pre.list_columns(data))
+EDA.information_data(data=data)
