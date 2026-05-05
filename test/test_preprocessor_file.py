@@ -3,4 +3,5 @@ from Core.preprocessor import EDA
 
 data = pd.read_csv("diabetes.csv")
 
-print(data.memory_usage(deep=True))
+print(EDA.find_high_col_missing_values(data=data).keys())
+
