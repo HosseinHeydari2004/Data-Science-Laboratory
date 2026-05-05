@@ -3,4 +3,4 @@ from Core.preprocessor import EDA
 
 data = pd.read_csv("diabetes.csv")
 
-EDA.information_data(data=data)
+print(data.memory_usage(deep=True))

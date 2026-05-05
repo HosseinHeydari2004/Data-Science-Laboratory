@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pandas.io.formats.style import Styler
 
 
 class EDA:
@@ -23,5 +24,18 @@ class EDA:
         return list(data.columns)
 
     @classmethod
-    def information_data(cls, data: pd.DataFrame):
-        return data.info()
+    def information_data(cls, data: pd.DataFrame) -> Styler:
+        d = pd.DataFrame(
+            data={
+                "columns": data.columns,
+                "data type": data.dtypes.values,
+                "missing values": data.isna().sum(),
+                "percent missing values(%)": (data.isna().sum() / len(data)) * 100,
+                "memory usage": data.memory_usage(deep=True, index=False)
+            }
+        ).reset_index(drop=True)
+        return d.style.highlight_max(
+            color="red", subset=["missing values", "percent missing values(%)"]
+        ).format({
+            "percent missing values(%)":"{:.2f}%"
+        })
