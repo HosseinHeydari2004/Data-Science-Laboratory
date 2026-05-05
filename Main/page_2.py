@@ -9,4 +9,5 @@ if 'df' in st.session_state:
     with st.expander("View dataset"):
         st.dataframe(df)
     with st.expander("information dataset"):
-        st.write(EDA.information_data(data=df))
+        st.dataframe(EDA.information_data(data=df))
+        st.warning(f"")

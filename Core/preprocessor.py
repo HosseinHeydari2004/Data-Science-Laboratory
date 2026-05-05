@@ -5,17 +5,6 @@ from pandas.io.formats.style import Styler
 
 class EDA:
     @classmethod
-    def missing_value_report(cls, data: pd.DataFrame) -> pd.DataFrame:
-        df = pd.DataFrame(
-            data={
-                "column": data.columns,
-                "missing value": data.isna().sum(),
-                "percent missing values": round((data.isna().sum() / len(data)) * 100, 3),
-            }
-        ).reset_index(drop=True)
-        return df
-
-    @classmethod
     def check_unique(cls, data: pd.DataFrame, select_columns: str) -> np.ndarray:
         return data[select_columns].unique()
 
@@ -39,3 +28,6 @@ class EDA:
         ).format({
             "percent missing values(%)":"{:.2f}%"
         })
+    @classmethod
+    def remove_missing_values(cls):
+
