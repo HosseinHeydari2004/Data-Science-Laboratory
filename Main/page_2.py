@@ -20,5 +20,22 @@ if 'df' in st.session_state:
             critical_missing = EDA.report_high_missing_value(data=df, threshold=threshold)
             if critical_missing:
                 st.warning(f"High number of missing values: {critical_missing[2]}", icon="⚠️")
+        if EDA.check_date_in_data(data=df):
+            st.warning(f"⚠️The date column is object")
+            if st.button("change to Datetime"):
+                df = EDA.change_dtype_datetime64(data=df)
+                st.session_state['df'] = df
+                st.success("✅ The date column was successfully updated!")
+                st.rerun()
 
 
+    with st.expander("describe data"):
+        describe = EDA.describe_data(data=df)
+        st.dataframe(describe)
+    with st.expander("unique values"):
+        columns = EDA.list_columns(data=df)
+        select_columns = st.selectbox(
+            label="Please select the desired column",
+            options=columns
+        )
+        st.dataframe(EDA.check_unique(data=df, select_column=select_columns))

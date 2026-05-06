@@ -5,12 +5,12 @@ from pandas.io.formats.style import Styler
 
 class EDA:
     @classmethod
-    def check_unique(cls, data: pd.DataFrame, select_columns: str) -> np.ndarray:
-        return data[select_columns].unique()
+    def check_unique(cls, data: pd.DataFrame, select_column: str) -> np.ndarray:
+        return data[select_column].unique()
 
     @classmethod
     def list_columns(cls, data: pd.DataFrame) -> list:
-        return list(data.columns)
+        return data.columns.to_list()
 
     @classmethod
     def information_data(cls, data: pd.DataFrame) -> Styler:
@@ -53,3 +53,22 @@ class EDA:
         if percent_missing > threshold:
             return True, percent_missing, total_missing_value
         return False
+
+    @classmethod
+    def describe_data(cls, data: pd.DataFrame) -> pd.DataFrame:
+        return data.describe(include="all").T
+
+    @classmethod
+    def check_date_in_data(cls, data: pd.DataFrame) -> bool:
+        if "date" in data.columns:
+            if pd.api.types.is_datetime64_any_dtype(data["date"]):
+                return False
+            else:
+                return True
+        else:
+            return False
+
+    @classmethod
+    def change_dtype_datetime64(cls, data: pd.DataFrame) -> pd.DataFrame:
+        data['date'] = pd.to_datetime(data['date'])
+        return data

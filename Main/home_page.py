@@ -37,6 +37,5 @@ if uploaded_file is not None:
 
         st.session_state['df'] = df
         st.success(f"File '{uploaded_file.name}' uploaded successfully!")
-        st.balloons()
     except Exception as e:
         st.error(f"Error reading file: {e}")
