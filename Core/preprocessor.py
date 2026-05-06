@@ -35,8 +35,8 @@ class EDA:
         }).apply(highlight_bad_values, subset=["missing values", "percent missing values(%)"])
 
     @classmethod
-    def remove_missing_values(cls):
-        pass
+    def remove_missing_values(cls, data: pd.DataFrame, axis: int = 0):
+        return data.dropna(axis=axis)
 
     @classmethod
     def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
@@ -72,3 +72,16 @@ class EDA:
     def change_dtype_datetime64(cls, data: pd.DataFrame) -> pd.DataFrame:
         data['date'] = pd.to_datetime(data['date'])
         return data
+
+    @classmethod
+    def get_duplicate(cls, data: pd.DataFrame) -> int | bool:
+        if data.duplicated().sum() > 0:
+            return data.duplicated().sum()
+        else:
+            return False
+
+    @classmethod
+    def count_missing_values(cls, data: pd.DataFrame):
+        if data.isna().any(axis=1).sum() > 0:
+            return True
+        return False
