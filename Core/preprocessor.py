@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
+from scipy import stats
 
 
 class EDA:
@@ -36,7 +37,7 @@ class EDA:
 
     @classmethod
     def describe_data(cls, data: pd.DataFrame) -> pd.DataFrame:
-        return data.describe(include="all").T
+        return data.describe(include="all").rename({"top": "mode"}).T
 
     @classmethod
     def check_date_in_data(cls, data: pd.DataFrame) -> bool:
@@ -60,6 +61,15 @@ class EDA:
         else:
             return False
 
+    @classmethod
+    def detect_numeric_type(cls, data: pd.DataFrame):
+        numeric = data.select_dtypes(include="number").columns.to_list()
+        return [col for col in numeric if col != "id"]
+
+    @classmethod
+    def detect_object_type(cls, data: pd.DataFrame):
+        return data.select_dtypes(include="object").columns.to_list()
+
 
 class MissingValue:
     """
@@ -71,7 +81,7 @@ class MissingValue:
     """
 
     @classmethod
-    def count_missing_values(cls, data: pd.DataFrame):
+    def check_missing_values(cls, data: pd.DataFrame):
         if data.isna().any(axis=1).sum() > 0:
             return True
         return False
@@ -95,3 +105,23 @@ class MissingValue:
     def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
         percent_missing = (data.isna().sum() / len(data)) * 100
         return percent_missing[percent_missing > threshold].to_dict()
+
+
+class handle_outliers:
+    """"""
+
+    @classmethod
+    def detect_outliers(cls, data: pd.DataFrame, col: pd.DataFrame, method: str = "IQR",
+                        threshold: int = 3) -> pd.DataFrame:
+        if method == "IQR":
+            Q1 = data[col].quantile(q=0.25)
+            Q3 = data[col].quantile(q=0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            outliers = data[(data[col] < lower_bound) | (data[col] > upper_bound)]
+            return outliers[col].reset_index(drop=True)
+        elif method == "Z_score":
+            z = np.abs(stats.zscore(data[col]))
+            outliers_index = np.where(z > threshold)
+            return data.iloc[outliers_index][col].reset_index(drop=True)
