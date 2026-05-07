@@ -35,26 +35,6 @@ class EDA:
         }).apply(highlight_bad_values, subset=["missing values", "percent missing values(%)"])
 
     @classmethod
-    def remove_missing_values(cls, data: pd.DataFrame, axis: int = 0):
-        return data.dropna(axis=axis)
-
-    @classmethod
-    def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
-        percent_missing = (data.isna().sum() / len(data)) * 100
-        return percent_missing[percent_missing > threshold].to_dict()
-
-    @classmethod
-    def report_high_missing_value(
-            cls, data: pd.DataFrame, threshold: int = 30
-    ) -> tuple[bool, float | int, int] | bool:
-
-        percent_missing = (data.isna().any(axis=1).sum() / len(data)) * 100
-        total_missing_value = data.isna().any(axis=1).sum()
-        if percent_missing > threshold:
-            return True, percent_missing, total_missing_value
-        return False
-
-    @classmethod
     def describe_data(cls, data: pd.DataFrame) -> pd.DataFrame:
         return data.describe(include="all").T
 
@@ -80,8 +60,38 @@ class EDA:
         else:
             return False
 
+
+class MissingValue:
+    """
+    A utility class to analyze and handle missing values in pandas DataFrames.
+
+    This class provides streamlined methods to detect null values and apply
+    various imputation or deletion strategies to maintain data integrity
+    for machine learning pipelines.
+    """
+
     @classmethod
     def count_missing_values(cls, data: pd.DataFrame):
         if data.isna().any(axis=1).sum() > 0:
             return True
         return False
+
+    @classmethod
+    def report_high_missing_value(
+            cls, data: pd.DataFrame, threshold: int = 30
+    ) -> tuple[bool, float | int, int] | bool:
+
+        percent_missing = (data.isna().any(axis=1).sum() / len(data)) * 100
+        total_missing_value = data.isna().any(axis=1).sum()
+        if percent_missing > threshold:
+            return True, percent_missing, total_missing_value
+        return False
+
+    @classmethod
+    def remove_missing_values(cls, data: pd.DataFrame, axis: int = 0):
+        return data.dropna(axis=axis)
+
+    @classmethod
+    def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
+        percent_missing = (data.isna().sum() / len(data)) * 100
+        return percent_missing[percent_missing > threshold].to_dict()
