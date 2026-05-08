@@ -1,6 +1,7 @@
 import streamlit as st
 
 from Core.preprocessor import MissingValue, EDA, handle_outliers
+from components.charts import seaborn_chart
 
 st.title("Exploratory Data Analysis (EDA)")
 
@@ -35,11 +36,11 @@ if 'df' in st.session_state:
 
         if EDA.check_date_in_data(data=df):
             st.warning(f"⚠️The date column is object")
-            if st.button("change to Datetime"):
+            if st.button("change to Datetime", icon="↘️", help="change data type"):
                 df = EDA.change_dtype_datetime64(data=df)
                 st.session_state['df'] = df
                 st.success("✅ The date column was successfully updated!")
-                st.rerun()
+
         duplicate = EDA.get_duplicate(data=df)
         if duplicate:
             threshold_duplicate = st.slider("Select duplicate Threshold", 0, len(df), 5)
@@ -64,11 +65,11 @@ if 'df' in st.session_state:
     with st.expander("view outlier"):
         outliers_col_selectbox = st.selectbox(
             "Please select the desired column",
-            options=EDA.detect_numeric_type(data=df)
+            options=EDA.detect_numeric_type(data=df), key="outliers_col_selectbox"
         )
         method_selectbox = st.selectbox(
             "Please select your preferred method",
-            options=["IQR", "Z_score"]
+            options=["IQR", "Z_score"], key="method_selectbox"
         )
         outliers = handle_outliers.detect_outliers(
             data=df, col=outliers_col_selectbox, method=method_selectbox
@@ -89,3 +90,34 @@ if 'df' in st.session_state:
             st.warning(
                 f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
             )
+    with st.expander("Distribution Analysis"):
+        with st.expander("histogram"):
+            numeric = EDA.detect_numeric_type(data=df)
+            category = EDA.detect_object_type(data=df)
+            select_columns1 = st.selectbox(
+                "please select column",
+                options=numeric, key="st1"
+            )
+            select_columns2 = st.selectbox(
+                "please select column",
+                options=[None] + numeric, key="st2", index=0
+            )
+            select_hue = st.selectbox(
+                "please select hue",
+                options=[None] + category,
+                key="st3", index=0
+            )
+            select_kde_mode = st.selectbox(
+                "please select mode kde",
+                options=[False, True],
+                key="st4", index=0
+            )
+            select_fill_mode = st.selectbox(
+                "please select mode fill",
+                options=[False, True],
+                key="st5", index=0
+            )
+            st.pyplot(seaborn_chart.histogram(
+                data=df, x=select_columns1, y=select_columns2,
+                hue=select_hue, kde=select_kde_mode, fill=select_fill_mode
+            ))
