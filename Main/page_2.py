@@ -115,9 +115,28 @@ if 'df' in st.session_state:
             select_fill_mode = st.selectbox(
                 "please select mode fill",
                 options=[False, True],
-                key="st5", index=0
+                key="st5", index=1
             )
+            select_width = st.number_input("please enter width figure:", value=5)
+            select_height = st.number_input("please enter height figure:", value=5)
+            select_dpi = st.number_input("please enter dpi:", value=80, max_value=200)
+            select_main_title = st.text_input("please enter main title:")
+            select_xlabel = st.text_input("please enter xlabel:")
+            select_ylabel = st.text_input("please enter ylabel:")
+            select_main_title_fontsize = st.number_input("please enter main title fontsize:", value=15)
+            select_xlabel_fontsize = st.number_input("please enter xlabel fontsize:", value=13)
+            select_ylabel_fontsize = st.number_input("please enter ylabel fontsize:", value=13)
+            select_ax_mode = st.selectbox(
+                "please select mode axis",
+                options=["both", "x", "y"], index=0, key="st6"
+            )
+            select_ax_fontsize = st.number_input("please enter axis fontsize", value=12)
             st.pyplot(seaborn_chart.histogram(
                 data=df, x=select_columns1, y=select_columns2,
-                hue=select_hue, kde=select_kde_mode, fill=select_fill_mode
+                hue=select_hue, kde=select_kde_mode, fill=select_fill_mode,
+                figsize=(select_width, select_height), dpi=select_dpi,
+                main_title=select_main_title, xlabel=select_xlabel,
+                ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
             ))
