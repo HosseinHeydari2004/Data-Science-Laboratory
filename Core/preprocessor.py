@@ -40,19 +40,20 @@ class EDA:
         return data.describe(include="all").rename({"top": "mode"}).T
 
     @classmethod
-    def check_date_in_data(cls, data: pd.DataFrame) -> bool:
-        if "date" in data.columns:
-            if pd.api.types.is_datetime64_any_dtype(data["date"]):
-                return False
-            else:
-                return True
-        else:
-            return False
+    def check_date_in_data(cls, data: pd.DataFrame) -> bool | tuple[bool, list]:
+        date_cols = [c for c in data.columns if c in ["date", "datetime", "Date", "Datetime"]]
+        if date_cols:
+            target_col = date_cols[0]
+            data[target_col] = pd.to_datetime(data[target_col])
+            return True, date_cols
+        return False
 
     @classmethod
     def change_dtype_datetime64(cls, data: pd.DataFrame) -> pd.DataFrame:
-        data['date'] = pd.to_datetime(data['date'])
-        return data
+        if EDA.check_date_in_data(data=data)[0]:
+            data[EDA.check_date_in_data(data=data)[1][0]] = pd.to_datetime(
+                data[EDA.check_date_in_data(data=data)[1][0]])
+            return data
 
     @classmethod
     def get_duplicate(cls, data: pd.DataFrame) -> int | bool:
