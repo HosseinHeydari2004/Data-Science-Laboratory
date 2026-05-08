@@ -1,13 +1,14 @@
 # 🧪 Data Science Laboratory
 
-**Data Science Laboratory** is an interactive environment designed for
-experimenting, analyzing, and deploying data science and machine
-learning workflows through an intuitive web interface built with
-Streamlit.
+**Data Science Laboratory** is an interactive environment designed for experimenting, analyzing, and deploying data
+science and machine learning workflows through an intuitive web interface built with Streamlit.
 
-This project aims to provide a practical laboratory for exploring data
-analysis, visualization, model development, and interpretability
-techniques in a structured and reproducible way.
+This project aims to provide a practical laboratory for exploring data analysis, visualization, model development, and
+interpretability techniques in a structured and reproducible way.
+
+<p>
+    <img src="picture/p1.png">
+</p>
 
 > ⚠️ **Project Status:**\
 > This project is currently in the **early stages of development** and
@@ -17,31 +18,29 @@ techniques in a structured and reproducible way.
 
 ## 🚀 Project Overview
 
-The goal of this repository is to create a unified platform where users
-can:
+The goal of this repository is to create a unified platform where users can:
 
--   Perform Exploratory Data Analysis (EDA)
--   Visualize datasets interactively
--   Train and evaluate Machine Learning models
--   Analyze feature importance & model interpretability
--   Experiment with real-world datasets
--   Deploy data science workflows via a web interface
+- Perform Exploratory Data Analysis (EDA)
+- Visualize datasets interactively
+- Train and evaluate Machine Learning models
+- Analyze feature importance & model interpretability
+- Experiment with real-world datasets
+- Deploy data science workflows via a web interface
 
-All functionalities are accessible through a **Streamlit-based
-interactive dashboard**.
+All functionalities are accessible through a **Streamlit-based interactive dashboard**.
 
 ------------------------------------------------------------------------
 
 ## 🛠️ Tech Stack
 
--   Python
--   Streamlit
--   Pandas
--   NumPy
--   Scikit-learn
--   Plotly
--   Matplotlib / Seaborn
--   SHAP (Model Interpretability)
+- Python
+- Streamlit
+- Pandas
+- NumPy
+- Scikit-learn
+- Plotly
+- Matplotlib / Seaborn
+- SHAP (Model Interpretability)
 
 ------------------------------------------------------------------------
 
@@ -122,16 +121,14 @@ The application will automatically open in your browser.
 
 ## 🎯 Project Vision
 
-This repository is intended to evolve into a **complete Data Science
-experimentation platform**, bridging:
+This repository is intended to evolve into a **complete Data Science experimentation platform**, bridging:
 
--   Data Analysis
--   Machine Learning
--   Model Interpretability
--   Interactive Deployment
+- Data Analysis
+- Machine Learning
+- Model Interpretability
+- Interactive Deployment
 
-The long-term objective is to simulate a real-world **ML laboratory
-environment**.
+The long-term objective is to simulate a real-world **ML laboratory environment**.
 
 ------------------------------------------------------------------------
 
@@ -141,10 +138,10 @@ Contributions, suggestions, and feedback are welcome.
 
 If you'd like to contribute:
 
-1.  Fork the repository
-2.  Create a feature branch
-3.  Commit your changes
-4.  Open a Pull Request
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Open a Pull Request
 
 ------------------------------------------------------------------------
 
@@ -162,11 +159,10 @@ If you'd like to contribute:
 
 **Hossein Heydari**
 
--   GitHub: [Data-Science-Laboratory](https://github.com/HosseinHeydari2004/Data-Science-Laboratory)
+- GitHub: [Data-Science-Laboratory](https://github.com/HosseinHeydari2004/Data-Science-Laboratory)
 
 ---
 
 ## 🙏 Thank You
 
-Thank you for taking the time to explore this project.
-Your interest, feedback, and support are greatly appreciated.
+Thank you for taking the time to explore this project. Your interest, feedback, and support are greatly appreciated.
