@@ -91,52 +91,120 @@ if 'df' in st.session_state:
                 f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
             )
     with st.expander("Distribution Analysis"):
-        with st.expander("histogram"):
-            numeric = EDA.detect_numeric_type(data=df)
-            category = EDA.detect_object_type(data=df)
-            select_columns1 = st.selectbox(
-                "please select column",
-                options=numeric, key="st1"
-            )
-            select_columns2 = st.selectbox(
-                "please select column",
-                options=[None] + numeric, key="st2", index=0
-            )
-            select_hue = st.selectbox(
-                "please select hue",
-                options=[None] + category,
-                key="st3", index=0
-            )
-            select_kde_mode = st.selectbox(
-                "please select mode kde",
-                options=[False, True],
-                key="st4", index=0
-            )
-            select_fill_mode = st.selectbox(
-                "please select mode fill",
-                options=[False, True],
-                key="st5", index=1
-            )
-            select_width = st.number_input("please enter width figure:", value=5)
-            select_height = st.number_input("please enter height figure:", value=5)
-            select_dpi = st.number_input("please enter dpi:", value=80, max_value=200)
-            select_main_title = st.text_input("please enter main title:")
-            select_xlabel = st.text_input("please enter xlabel:")
-            select_ylabel = st.text_input("please enter ylabel:")
-            select_main_title_fontsize = st.number_input("please enter main title fontsize:", value=15)
-            select_xlabel_fontsize = st.number_input("please enter xlabel fontsize:", value=13)
-            select_ylabel_fontsize = st.number_input("please enter ylabel fontsize:", value=13)
-            select_ax_mode = st.selectbox(
-                "please select mode axis",
-                options=["both", "x", "y"], index=0, key="st6"
-            )
-            select_ax_fontsize = st.number_input("please enter axis fontsize", value=12)
-            st.pyplot(seaborn_chart.histogram(
-                data=df, x=select_columns1, y=select_columns2,
-                hue=select_hue, kde=select_kde_mode, fill=select_fill_mode,
-                figsize=(select_width, select_height), dpi=select_dpi,
-                main_title=select_main_title, xlabel=select_xlabel,
-                ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
-            ))
+        select_plot_mode = st.selectbox(
+            "please select plot mode:",
+            options=["seaborn", "plotly"]
+        )
+        if select_plot_mode == "seaborn":
+            with st.expander("histogram"):
+                numeric = EDA.detect_numeric_type(data=df)
+                category = EDA.detect_object_type(data=df)
+                select_columns1 = st.selectbox(
+                    "please select column",
+                    options=numeric, key="st1"
+                )
+                select_columns2 = st.selectbox(
+                    "please select column",
+                    options=[None] + numeric, key="st2", index=0
+                )
+                select_hue = st.selectbox(
+                    "please select hue",
+                    options=[None] + category,
+                    key="st3", index=0
+                )
+                select_kde_mode = st.selectbox(
+                    "please select mode kde",
+                    options=[False, True],
+                    key="st4", index=0
+                )
+                select_fill_mode = st.selectbox(
+                    "please select mode fill",
+                    options=[False, True],
+                    key="st5", index=1
+                )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st6"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize")
+                st.pyplot(seaborn_chart.histogram(
+                    data=df, x=select_columns1, y=select_columns2,
+                    hue=select_hue, kde=select_kde_mode, fill=select_fill_mode,
+                    figsize=(select_width, select_height), dpi=select_dpi,
+                    main_title=select_main_title, xlabel=select_xlabel,
+                    ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                    ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
+                ))
+            with st.expander("kde plot"):
+                select_columns1 = st.selectbox(
+                    "please select column",
+                    options=numeric, key="st7"
+                )
+                select_columns2 = st.selectbox(
+                    "please select column",
+                    options=[None] + numeric, key="st8", index=0
+                )
+                select_hue = st.selectbox(
+                    "please select hue",
+                    options=[None] + category,
+                    key="st9", index=0
+                )
+                select_fill_mode = st.selectbox(
+                    "please select mode fill",
+                    options=[False, True],
+                    key="st11", index=1
+                )
+                select_multiple_mode = st.selectbox(
+                    "please select multiple mode",
+                    options=["layer", "stack", "fill"], key="st12", index=0
+                )
+                if (select_hue is None) and (select_multiple_mode == "fill"):
+                    st.error(
+                        "To use the 'multiple' parameter in 'fill' mode, you must also have the 'hue' parameter.",
+                        icon="⚠️"
+                    )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width2")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height2")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi2")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title2")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel2")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel2")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize2")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize2")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize2")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st13"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize2")
+                st.pyplot(seaborn_chart.kde_plot(
+                    data=df, x=select_columns1, y=select_columns2,
+                    hue=select_hue, fill=select_fill_mode,
+                    multiple=select_multiple_mode, main_title=select_main_title,
+                    xlabel=select_xlabel, ylabel=select_ylabel,
+                    main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize,
+                    ylabel_fontsize=select_ylabel_fontsize,
+                    ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                    figsize=(select_width, select_height), dpi=select_dpi
+                ))
+        else:
+            pass
