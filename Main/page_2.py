@@ -91,14 +91,14 @@ if 'df' in st.session_state:
                 f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
             )
     with st.expander("Distribution Analysis"):
+        numeric = EDA.detect_numeric_type(data=df)
+        category = EDA.detect_object_type(data=df)
         select_plot_mode = st.selectbox(
             "please select plot mode:",
             options=["seaborn", "plotly"]
         )
         if select_plot_mode == "seaborn":
             with st.expander("histogram"):
-                numeric = EDA.detect_numeric_type(data=df)
-                category = EDA.detect_object_type(data=df)
                 select_columns1 = st.selectbox(
                     "please select column",
                     options=numeric, key="st1"
@@ -206,5 +206,61 @@ if 'df' in st.session_state:
                     ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
                     figsize=(select_width, select_height), dpi=select_dpi
                 ))
+            with st.expander("boxplot"):
+                select_x = st.selectbox(
+                    "please select column x",
+                    options=numeric, key="select_columns_k2",
+                )
+                select_y = st.selectbox(
+                    "please select column y",
+                    options=[None] + category, key="select_columns_k3"
+                )
+                select_hue = st.selectbox(
+                    "please select hue",
+                    options=[None] + category,
+                    key="hue2", index=0
+                )
+                select_fill_mode = st.selectbox(
+                    "please select mode fill",
+                    options=[False, True],
+                    key="fill2", index=1
+                )
+                select_saturation = st.number_input(
+                    "please enter saturation",
+                    value=0.75, key="saturation"
+                )
+                select_gap = st.slider(
+                    "please enter gap",
+                    min_value=0.0, max_value=5.0, value=0.15, step=0.15
+                )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width3")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height3")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi3")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title3")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel3")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel3")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize3")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize3")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize3")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st14"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize3")
+                st.pyplot(
+                    seaborn_chart.boxplot(
+                        data=df, x=select_x, y=select_y,
+                        hue=select_hue, saturation=select_saturation,
+                        fill=select_fill_mode, gap=select_gap, figsize=(select_width, select_height),
+                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
+                    )
+                )
         else:
             pass
