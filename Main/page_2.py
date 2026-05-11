@@ -262,5 +262,86 @@ if 'df' in st.session_state:
                         ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
                     )
                 )
+
+            with st.expander("countplot"):
+                select_x = st.selectbox(
+                    "please select x",
+                    options=[None] + category, index=0, key="select_columns_k4"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + category, index=0, key="select_columns_k5"
+                )
+                st.info(
+                    "You must choose either x or y; otherwise, an error will occur.",
+                    icon="⚠️"
+                )
+                select_hue = st.selectbox(
+                    "please select hue",
+                    options=[None] + category,
+                    key="hue3", index=0
+                )
+                select_saturation = st.number_input(
+                    "please enter saturation",
+                    value=0.75, key="saturation2"
+                )
+                select_fill_mode = st.selectbox(
+                    "please select fill mode",
+                    options=[False, True], index=0, key="fill_mode2"
+                )
+                select_gap = st.slider(
+                    "please enter gap",
+                    min_value=0.0, max_value=5.0, value=0.15, step=0.15, key="gap"
+                )
+                select_stat = st.selectbox(
+                    "please select stat",
+                    options=["count", "percent", "proportion", "probability"], index=0, key="stat"
+                )
+                select_orient = st.selectbox(
+                    "please select orient",
+                    options=["v", "h", "x", "y"], index=0, key="orient"
+                )
+                select_width_plot = st.number_input(
+                    "please enter width plot",
+                    value=0.8, key="width_plot"
+                )
+                select_log_scale = st.selectbox(
+                    "please select log scale",
+                    options=[False, True], index=0, key="log_scale"
+                )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width4")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height4")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi4")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title4")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel4")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel4")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize4")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize4")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize4")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st15"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize4")
+                st.pyplot(
+                    seaborn_chart.countplot(
+                        data=df, x=select_x, y=select_y,
+                        hue=select_hue, stat=select_stat,
+                        saturation=select_saturation, orient=select_orient,
+                        width=select_width_plot, log_scale=select_log_scale,
+                        dpi=select_dpi, figsize=(select_width, select_height),
+                        main_title=select_main_title, xlabel=select_xlabel,
+                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                        fill=select_fill_mode, gap=select_gap
+                    )
+                )
+
+
         else:
             pass
