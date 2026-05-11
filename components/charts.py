@@ -329,10 +329,32 @@ class seaborn_chart:
     ) -> plt.Figure:
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         sns.scatterplot(
-            data=data, x=x, y=y, size=size, s=s,hue=hue, style=style, ax=ax
+            data=data, x=x, y=y, size=size, s=s, hue=hue, style=style, ax=ax
         )
         ax.set_title(label=main_title, fontsize=main_title_fontsize)
         ax.set_xlabel(xlabel, fontsize=xlabel_fontsize)
         ax.set_ylabel(ylabel, fontsize=ylabel_fontsize)
         plt.tick_params(axis=ax_mode, labelsize=ax_fontsize)
         return fig
+
+    @classmethod
+    def violin_plot(
+            cls, data: pd.DataFrame = None, x: pd.Series = None, y: pd.Series = None,
+            hue: pd.Series = None, orient: str = None, fill: bool = False,
+            gap: float = None, figsize: tuple[int, int] = (5, 5), dpi: int = 80,
+            main_title: str = "", xlabel: str = "",
+            ylabel: str = "", main_title_fontsize: int = 15,
+            xlabel_fontsize: int = 12, ylabel_fontsize: int = 12,
+            ax_fontsize: int = 11,
+            ax_mode: str = "both",
+    ) -> plt.Figure:
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        sns.violinplot(
+            data=data, x=x, y=y, hue=hue, orient=orient, fill=fill, gap=gap, ax=ax
+        )
+        ax.set_title(label=main_title, fontsize=main_title_fontsize)
+        ax.set_xlabel(xlabel, fontsize=xlabel_fontsize)
+        ax.set_ylabel(ylabel, fontsize=ylabel_fontsize)
+        plt.tick_params(axis=ax_mode, labelsize=ax_fontsize)
+        return fig
+
