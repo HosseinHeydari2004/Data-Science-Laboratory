@@ -283,7 +283,32 @@ class seaborn_chart:
             data=data, x=x, y=y,
             hue=hue,
             saturation=saturation, fill=fill,
-            gap=gap
+            gap=gap, ax=ax
+        )
+        ax.set_title(label=main_title, fontsize=main_title_fontsize)
+        ax.set_xlabel(xlabel, fontsize=xlabel_fontsize)
+        ax.set_ylabel(ylabel, fontsize=ylabel_fontsize)
+        plt.tick_params(axis=ax_mode, labelsize=ax_fontsize)
+        return fig
+
+    @classmethod
+    def countplot(
+            cls, data: pd.DataFrame = None, x: pd.Series = None, y: pd.Series = None,
+            hue: pd.Series = None, stat: str = "count", orient: str = "v", saturation: float = 0.75,
+            width: float = 1, log_scale: bool = False, dpi: int = 80,
+            figsize: tuple[int, int] = (5, 5),
+            main_title: str = "", xlabel: str = "",
+            ylabel: str = "", main_title_fontsize: int = 15,
+            xlabel_fontsize: int = 12, ylabel_fontsize: int = 12,
+            ax_fontsize: int = 11,
+            ax_mode: str = "both", gap: float = 0.8, fill: bool = False
+
+    ) -> plt.Figure:
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        sns.countplot(
+            data=data, x=x, y=y, hue=hue, stat=stat, orient=orient,
+            saturation=saturation, width=width, log_scale=log_scale, ax=ax, gap=gap,
+            fill=fill
         )
         ax.set_title(label=main_title, fontsize=main_title_fontsize)
         ax.set_xlabel(xlabel, fontsize=xlabel_fontsize)
