@@ -349,7 +349,7 @@ if 'df' in st.session_state:
                     index=0, key="select_columns_k6"
                 )
                 select_y = st.selectbox(
-                    "please select x",
+                    "please select y",
                     options=[None] + numeric + category,
                     index=0, key="select_columns_k7"
                 )
@@ -401,3 +401,59 @@ if 'df' in st.session_state:
                         ax_mode=select_ax_mode, ax_fontsize=select_ax_fontsize
                     )
                 )
+
+            with st.expander("violin_plot"):
+                select_x = st.selectbox(
+                    "please select x",
+                    options=[None] + numeric + category, index=0, key="select_columns_k8"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + numeric + category, index=0, key="select_columns_k9"
+                )
+                select_hue = st.selectbox(
+                    "please select hue",
+                    options=[None] + category, index=0, key="hue5",
+                )
+                select_orient = st.selectbox(
+                    "please select orient",
+                    options=["v", "h", "x", "y"], index=0, key="orient2"
+                )
+                select_fill_mode = st.selectbox(
+                    "please select fill mode",
+                    options=[False, True], index=0, key="fill_mode3"
+                )
+                select_gap = st.slider(
+                    "please enter gap",
+                    min_value=0.0, max_value=5.0, value=0.15, step=0.15, key="gap2"
+                )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width6")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height6")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi6")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title6")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel6")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel6")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize6")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize6")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize6")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st17"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize6")
+                st.pyplot(
+                    seaborn_chart.violin_plot(
+                        data=df, x=select_x, y=select_y, hue=select_hue, gap=select_gap,
+                        fill=select_fill_mode, orient=select_orient, figsize=(select_width, select_height),
+                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
+                    )
+                )
+
+
