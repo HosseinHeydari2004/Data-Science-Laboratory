@@ -93,6 +93,7 @@ if 'df' in st.session_state:
     with st.expander("Visualization"):
         numeric = EDA.detect_numeric_type(data=df)
         category = EDA.detect_object_type(data=df)
+        Time_dtype = EDA.detect_time_type(data=df)
         select_plot_mode = st.selectbox(
             "please select plot mode:",
             options=["Simple", "interactive"]
@@ -455,6 +456,60 @@ if 'df' in st.session_state:
                         ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
                     )
                 )
+            with st.expander("lineplot"):
+                select_x = st.selectbox(
+                    "please select x",
+                    options=[None] + numeric + category + Time_dtype, index=0, key="select_columns_k10"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + numeric + category + Time_dtype, index=0, key="select_columns_k11"
+                )
+                select_hue = st.selectbox(
+                    "please select hue",
+                    options=[None] + category + Time_dtype, index=0, key="hue6",
+                )
+                select_style = st.selectbox(
+                    "please select style",
+                    options=[None] + category + Time_dtype, index=0, key="select_style2"
+                )
+                select_size = st.selectbox(
+                    "please select size",
+                    options=[None] + category + numeric,
+                    index=0, key="select_size3"
+                )
+                select_sort = st.selectbox(
+                    "please select sort",
+                    options=[False, True], index=1, key="select_sort"
+                )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width7")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height7")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi7")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title7")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel7")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel7")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize7")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize7")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize7")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st18"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize7")
+                st.pyplot(
+                    seaborn_chart.lineplot(
+                        data=df, x=select_x, y=select_y, hue=select_hue, style=select_style,
+                        size=select_size, sort=select_sort, figsize=(select_width, select_height),
+                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
+                    )
+                )
 
 
 
@@ -466,5 +521,3 @@ else:
         "Please upload the data to the first page to activate this page",
         icon="⚠️"
     )
-
-
