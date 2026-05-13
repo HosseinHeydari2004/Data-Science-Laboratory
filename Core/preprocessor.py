@@ -75,6 +75,14 @@ class EDA:
     def detect_time_type(cls, data: pd.DataFrame):
         return data.select_dtypes(include=["datetime"]).columns.to_list()
 
+    @classmethod
+    def all_correlation(cls, data: pd.DataFrame):
+        return data.corr(numeric_only=True)
+
+    @classmethod
+    def col_correlation(cls, data: pd.Series, col1: pd.Series, col2: pd.Series):
+        return data[col1].corr(other=data[col2])
+
 
 class MissingValue:
     """
