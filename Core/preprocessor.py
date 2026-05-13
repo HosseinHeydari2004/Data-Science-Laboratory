@@ -71,6 +71,10 @@ class EDA:
     def detect_object_type(cls, data: pd.DataFrame):
         return data.select_dtypes(include="object").columns.to_list()
 
+    @classmethod
+    def detect_time_type(cls, data: pd.DataFrame):
+        return data.select_dtypes(include=["datetime"]).columns.to_list()
+
 
 class MissingValue:
     """
