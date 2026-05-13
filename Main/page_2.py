@@ -102,15 +102,15 @@ if 'df' in st.session_state:
             with st.expander("histogram"):
                 select_columns1 = st.selectbox(
                     "please select column",
-                    options=numeric, key="st1"
+                    options=numeric + category, key="st1"
                 )
                 select_columns2 = st.selectbox(
                     "please select column",
-                    options=[None] + numeric, key="st2", index=0
+                    options=[None] + numeric + category, key="st2", index=0
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category,
+                    options=[None] + category + numeric,
                     key="st3", index=0
                 )
                 select_kde_mode = st.selectbox(
@@ -153,15 +153,15 @@ if 'df' in st.session_state:
             with st.expander("kde plot"):
                 select_columns1 = st.selectbox(
                     "please select column",
-                    options=numeric, key="st7"
+                    options=[None] + numeric + category, key="st7"
                 )
                 select_columns2 = st.selectbox(
                     "please select column",
-                    options=[None] + numeric, key="st8", index=0
+                    options=[None] + numeric + category, key="st8", index=0
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category,
+                    options=[None] + category + numeric,
                     key="st9", index=0
                 )
                 select_fill_mode = st.selectbox(
@@ -214,11 +214,11 @@ if 'df' in st.session_state:
                 )
                 select_y = st.selectbox(
                     "please select column y",
-                    options=[None] + category, key="select_columns_k3"
+                    options=[None] + category + numeric, key="select_columns_k3"
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category,
+                    options=[None] + category + numeric,
                     key="hue2", index=0
                 )
                 select_fill_mode = st.selectbox(
@@ -267,11 +267,11 @@ if 'df' in st.session_state:
             with st.expander("countplot"):
                 select_x = st.selectbox(
                     "please select x",
-                    options=[None] + category, index=0, key="select_columns_k4"
+                    options=[None] + category + numeric, index=0, key="select_columns_k4"
                 )
                 select_y = st.selectbox(
                     "please select y",
-                    options=[None] + category, index=0, key="select_columns_k5"
+                    options=[None] + category + numeric, index=0, key="select_columns_k5"
                 )
                 st.info(
                     "You must choose either x or y; otherwise, an error will occur.",
@@ -279,7 +279,7 @@ if 'df' in st.session_state:
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category,
+                    options=[None] + category + numeric,
                     key="hue3", index=0
                 )
                 select_saturation = st.number_input(
@@ -288,7 +288,7 @@ if 'df' in st.session_state:
                 )
                 select_fill_mode = st.selectbox(
                     "please select fill mode",
-                    options=[False, True], index=0, key="fill_mode2"
+                    options=[False, True], index=1, key="fill_mode2"
                 )
                 select_gap = st.slider(
                     "please enter gap",
@@ -356,12 +356,12 @@ if 'df' in st.session_state:
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category,
+                    options=[None] + category + numeric,
                     key="hue4", index=0
                 )
                 select_size = st.selectbox(
                     "please select size",
-                    options=[None] + category,
+                    options=[None] + category + numeric,
                     index=0, key="select_size"
                 )
 
@@ -371,7 +371,7 @@ if 'df' in st.session_state:
                 )
                 select_style = st.selectbox(
                     "please select style",
-                    options=[None] + category, index=0, key="select_style"
+                    options=[None] + category + numeric, index=0, key="select_style"
                 )
                 select_width = st.number_input("please enter width figure:", value=5, key="select_width5")
                 select_height = st.number_input("please enter height figure:", value=5, key="select_height5")
@@ -414,7 +414,7 @@ if 'df' in st.session_state:
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category, index=0, key="hue5",
+                    options=[None] + category + numeric, index=0, key="hue5",
                 )
                 select_orient = st.selectbox(
                     "please select orient",
@@ -510,6 +510,69 @@ if 'df' in st.session_state:
                         ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
                     )
                 )
+
+            with st.expander("correlation heatmap"):
+                select_annot = st.selectbox(
+                    "please select annot",
+                    options=[False, True], index=0, key="annot1"
+                )
+                select_fmt_mode = st.selectbox(
+                    "please select mode fmt",
+                    options=["Auto", "Manual"], index=0, key="select_fmt_mode1"
+                )
+                select_size_annot = st.slider(
+                    "please select size annot",
+                    min_value=5, max_value=25, value=15, step=1, key="select_size_annot"
+                )
+                select_width = st.number_input("please enter width figure:", value=5, key="select_width8")
+                select_height = st.number_input("please enter height figure:", value=5, key="select_height8")
+                select_dpi = st.number_input("please enter dpi:", value=80, max_value=200, key="select_dpi8")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title8")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel8")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel8")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize8")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize8")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize8")
+                select_ax_mode = st.selectbox(
+                    "please select mode axis",
+                    options=["both", "x", "y"], index=0, key="st19"
+                )
+                select_ax_fontsize = st.number_input(
+                    "please enter axis fontsize", value=12, key="select_ax_fontsize8")
+                if select_fmt_mode == "Auto":
+                    st.pyplot(
+                        seaborn_chart.heatmap(
+                            data=EDA.all_correlation(data=df), annot=select_annot,
+                            figsize=(select_width, select_height),
+                            dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                            ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                            xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                            ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                            annot_kws={"size": select_size_annot}
+
+                        )
+                    )
+                else:
+                    select_fmt = st.selectbox(
+                        "please select fmt format",
+                        options=[".1f", ".2f", ".3f", ".4f"], index=1, key="select_fmt"
+                    )
+                    st.pyplot(
+                        seaborn_chart.heatmap(
+                            data=EDA.all_correlation(data=df), annot=select_annot, fmt=select_fmt,
+                            figsize=(select_width, select_height),
+                            dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                            ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                            xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                            ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                            annot_kws={"size": select_size_annot}
+
+                        )
+                    )
+
 
 
 
