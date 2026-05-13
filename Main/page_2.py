@@ -457,3 +457,14 @@ if 'df' in st.session_state:
                 )
 
 
+
+
+
+
+else:
+    st.error(
+        "Please upload the data to the first page to activate this page",
+        icon="⚠️"
+    )
+
+
