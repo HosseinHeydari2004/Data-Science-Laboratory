@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import streamlit as st
 
@@ -26,16 +28,30 @@ st.markdown(
     """
 )
 
-uploaded_file = st.file_uploader("Select a CSV or Excel file:", type=['csv', 'xlsx'], key="home_page_uploader")
+SAVE_PATH = "Data/Main_Data"
+os.makedirs(SAVE_PATH, exist_ok=True)
+
+uploaded_file = st.file_uploader(
+    "Select a CSV or Excel file:",
+    type=['csv', 'xlsx'],
+    key="home_page_uploader"
+)
 
 if uploaded_file is not None:
     try:
-        if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
+        file_name = uploaded_file.name
+        full_path = os.path.join(SAVE_PATH, file_name)
+        with open(full_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+
+        st.success(f"File saved to: {full_path}")
+        if file_name.endswith(".csv"):
+            df = pd.read_csv(full_path)
         else:
-            df = pd.read_excel(uploaded_file)
+            df = pd.read_excel(full_path)
 
         st.session_state['df'] = df
-        st.success(f"File '{uploaded_file.name}' uploaded successfully!")
+        st.success(f"File '{file_name}' uploaded and saved successfully!")
+
     except Exception as e:
-        st.error(f"Error reading file: {e}")
+        st.error(f"Error processing file: {e}")
