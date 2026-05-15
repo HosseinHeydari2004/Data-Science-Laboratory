@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
 from scipy import stats
+from sklearn.impute import SimpleImputer
 
 
 class EDA:
@@ -65,7 +66,7 @@ class EDA:
     @classmethod
     def detect_numeric_type(cls, data: pd.DataFrame):
         numeric = data.select_dtypes(include="number").columns.to_list()
-        return [col for col in numeric if col != "id"]
+        return numeric
 
     @classmethod
     def detect_object_type(cls, data: pd.DataFrame):
@@ -84,7 +85,7 @@ class EDA:
         return data[col1].corr(other=data[col2])
 
 
-class MissingValue:
+class handle_MissingValue:
     """
     A utility class to analyze and handle missing values in pandas DataFrames.
 
@@ -118,6 +119,19 @@ class MissingValue:
     def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
         percent_missing = (data.isna().sum() / len(data)) * 100
         return percent_missing[percent_missing > threshold].to_dict()
+
+    @classmethod
+    def fill_SimpleImputer(
+            cls, x: pd.DataFrame | pd.Series = None, strategy="mean", fill=0
+    ) -> pd.Series | pd.DataFrame:
+        if strategy == "constant":
+            imputer = SimpleImputer(strategy="constant", fill_value=fill)
+            x_filled = imputer.fit_transform(X=x)
+            return x_filled
+        else:
+            imputer = SimpleImputer(strategy=strategy)
+            x_filled = imputer.fit_transform(X=x)
+            return x_filled
 
 
 class handle_outliers:
