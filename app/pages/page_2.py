@@ -1,7 +1,7 @@
 import streamlit as st
 
 from Core.preprocessor import handle_MissingValue, EDA, handle_outliers
-from components.charts import seaborn_chart
+from components.charts import seaborn_chart, plotly_charts
 
 st.title("Exploratory Data Analysis (EDA)")
 
@@ -87,7 +87,7 @@ if 'df' in st.session_state:
                                                     threshold=threshold_outliers)
                 )
         else:
-            st.warning(
+            st.info(
                 f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
             )
     with st.expander("Visualization"):
@@ -571,6 +571,89 @@ if 'df' in st.session_state:
                             annot_kws={"size": select_size_annot}
                         )
                     )
+        elif select_plot_mode == "interactive":
+            with st.expander("scatter plot"):
+                select_x = st.selectbox(
+                    "please select x",
+                    options=[None] + numeric + category,
+                    index=0, key="select_columns_plotly_1"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + numeric + category,
+                    index=0, key="select_columns_plotly_2"
+                )
+                select_color = st.selectbox(
+                    "please select color",
+                    options=[None] + numeric + category,
+                    index=0, key="select_color_plotly"
+                )
+                select_size = st.selectbox(
+                    "please select size",
+                    options=[None] + numeric + category, index=0, key="select_size_plotly"
+                )
+                select_symbol = st.selectbox(
+                    "please select symbol",
+                    options=[None] + numeric + category,
+                    index=0, key="select_symbol_plotly"
+                )
+                select_size_symbol = st.slider(
+                    "please select size symbol",
+                    min_value=5, max_value=25, value=15, key="select_symbol_size_plotly"
+                )
+                select_hover_data = st.multiselect(
+                    "please select hover data",
+                    options=[None] + numeric + category,
+                    key="select_hover_data_plotly"
+                )
+                select_log_x = st.selectbox(
+                    "please select log x",
+                    options=[False, True], index=0, key="select_log_x_plotly"
+                )
+                select_log_y = st.selectbox(
+                    "please select log y",
+                    options=[False, True], index=0, key="select_log_x_plotly2"
+                )
+                select_template = st.selectbox(
+                    "please select template",
+                    options=[
+                        "plotly", "plotly_white", "plotly_dark",
+                        "ggplot2", "seaborn", "simple_white",
+                        "presentation", "none"
+                    ],
+                    index=0, key="select_template_plotly"
+                )
+                select_width = st.number_input("please enter width figure:", value=900, key="select_width9")
+                select_height = st.number_input("please enter height figure:", value=500, key="select_height9")
+                select_size_marker = st.number_input("please enter size marker:", value=10, max_value=100,
+                                                     key="select_dpi9")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title9")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel9")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel9")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize9")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize9")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize9")
+                select_tickfont_x = st.number_input(
+                    "please enter x axis size:", value=13, key="select_tickfont_x")
+                select_tickfont_y = st.number_input(
+                    "please enter y axis size:", value=13, key="select_tickfont_y")
+                st.plotly_chart(
+                    plotly_charts.scatterplot(
+                        data=df, x=select_x, y=select_y,
+                        color=select_color, symbol=select_symbol,
+                        size_max_symbol=select_size_symbol, hover_data=select_hover_data,
+                        log_x=select_log_x, log_y=select_log_y, size_marker=select_size_marker,
+                        figsize=(select_width, select_height), main_title=select_main_title,
+                        xlabel=select_xlabel, ylabel=select_ylabel,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        main_title_fontsize=select_main_title_fontsize, tickfont_x=select_tickfont_x,
+                        tickfont_y=select_tickfont_y, template=select_template
+
+                    )
+                )
 
     with st.expander("Auto EDA"):
         pass
@@ -585,7 +668,7 @@ if 'df' in st.session_state:
 
 
 else:
-    st.error(
+    st.warning(
         "Please upload the data to the first page to activate this page",
         icon="⚠️"
     )
