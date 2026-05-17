@@ -1,5 +1,8 @@
+from typing import Any
+
 import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.express as px
 import seaborn as sns
 
 
@@ -395,4 +398,38 @@ class seaborn_chart:
         ax.set_xlabel(xlabel, fontsize=xlabel_fontsize)
         ax.set_ylabel(ylabel, fontsize=ylabel_fontsize)
         plt.tick_params(axis=ax_mode, labelsize=ax_fontsize)
+        return fig
+
+
+class plotly_charts:
+    @classmethod
+    def scatterplot(
+            cls, data: pd.DataFrame | pd.Series = None, x: pd.Series = None,
+            y: pd.Series = None, color: str = None, size: pd.Series = None,
+            symbol: pd.Series = None, size_max_symbol: int = 15,
+            hover_data: dict[Any] | list[Any] = None, log_x: bool = False,
+            log_y: bool = True, figsize: tuple[int, int] = (900, 600),
+            main_title: str = "", xlabel: str = "",
+            ylabel: str = "", main_title_fontsize: int = 15,
+            xlabel_fontsize: int = 12, ylabel_fontsize: int = 12,
+            tickfont_x: int = 14, tickfont_y: int = 14, size_marker: int = 12,
+            template: str = None
+    ) -> plt.Figure:
+        fig = px.scatter(
+            data_frame=data, x=x, y=y,
+            color=color, size=size,
+            symbol=symbol, size_max=size_max_symbol,
+            hover_data=hover_data, log_x=log_x, log_y=log_y,
+            width=figsize[0], height=figsize[1]
+        )
+        fig.update_traces(marker=dict(size=size_marker))
+        fig.update_layout(
+            title=main_title,
+            title_font=dict(size=main_title_fontsize),
+            xaxis_title=xlabel,
+            yaxis_title=ylabel,
+            xaxis=dict(tickfont=dict(size=tickfont_x), title_font=dict(size=xlabel_fontsize)),
+            yaxis=dict(tickfont=dict(size=tickfont_y), title_font=dict(size=ylabel_fontsize)),
+            template=template
+        )
         return fig
