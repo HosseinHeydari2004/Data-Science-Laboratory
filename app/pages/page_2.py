@@ -1,6 +1,6 @@
 import streamlit as st
 
-from Core.preprocessor import MissingValue, EDA, handle_outliers
+from Core.preprocessor import handle_MissingValue, EDA, handle_outliers
 from components.charts import seaborn_chart
 
 st.title("Exploratory Data Analysis (EDA)")
@@ -15,7 +15,7 @@ if 'df' in st.session_state:
         st.dataframe(df)
     with st.expander("information dataset"):
         st.dataframe(EDA.information_data(data=df))
-        missing_value = MissingValue.check_missing_values(data=df)
+        missing_value = handle_MissingValue.check_missing_values(data=df)
         if missing_value:
             threshold = st.slider("Select Missing Value Threshold (%)", 0, 100, 30)
             st.warning(
@@ -24,13 +24,13 @@ if 'df' in st.session_state:
                 Otherwise, columns should be dropped.
                 """, icon="⚠️"
             )
-            critical_missing_cols = MissingValue.find_high_col_missing_values(data=df, threshold=threshold)
+            critical_missing_cols = handle_MissingValue.find_high_col_missing_values(data=df, threshold=threshold)
             if critical_missing_cols.keys():
                 st.warning(
                     f"The columns '{','.join(list(critical_missing_cols.keys()))}' "
                     f"have a large number of missing values", icon="⚠️"
                 )
-            critical_missing = MissingValue.report_high_missing_value(data=df, threshold=threshold)
+            critical_missing = handle_MissingValue.report_high_missing_value(data=df, threshold=threshold)
             if critical_missing:
                 st.warning(f"High number of missing values: {critical_missing[2]}", icon="⚠️")
 
