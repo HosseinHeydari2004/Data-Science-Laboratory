@@ -569,9 +569,14 @@ if 'df' in st.session_state:
                             xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
                             ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
                             annot_kws={"size": select_size_annot}
-
                         )
                     )
+
+    with st.expander("Auto EDA"):
+        pass
+
+
+
 
 
 
