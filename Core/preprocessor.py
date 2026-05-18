@@ -64,6 +64,14 @@ class EDA:
             return False
 
     @classmethod
+    def show_duplicate_values(cls, data: pd.DataFrame) -> pd.Series | pd.DataFrame:
+        return data[data.duplicated()]
+
+    @classmethod
+    def delete_duplicate_values(cls, data: pd.DataFrame) -> pd.DataFrame:
+        return data.drop_duplicates()
+
+    @classmethod
     def detect_numeric_type(cls, data: pd.DataFrame):
         numeric = data.select_dtypes(include="number").columns.to_list()
         return numeric
@@ -112,13 +120,21 @@ class handle_MissingValue:
         return False
 
     @classmethod
-    def remove_missing_values(cls, data: pd.DataFrame, axis: int = 0):
-        return data.dropna(axis=axis)
+    def remove_missing_values(cls, data: pd.DataFrame, axis: str = "row"):
+        if axis == "row":
+            return data.dropna(axis=0)
+        else:
+            return data.dropna(axis=1)
+
 
     @classmethod
     def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
         percent_missing = (data.isna().sum() / len(data)) * 100
         return percent_missing[percent_missing > threshold].to_dict()
+
+    @classmethod
+    def show_missing_values(cls, data: pd.DataFrame) -> pd.Series | pd.DataFrame:
+        return data[data.isna().any(axis=1)]
 
     @classmethod
     def fill_SimpleImputer(
