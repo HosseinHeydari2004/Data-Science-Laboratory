@@ -420,7 +420,7 @@ class plotly_charts:
             color=color, size=size,
             symbol=symbol, size_max=size_max_symbol,
             hover_data=hover_data, log_x=log_x, log_y=log_y,
-            width=figsize[0], height=figsize[1]
+            width=figsize[0], height=figsize[1],
         )
         fig.update_traces(marker=dict(size=size_marker))
         fig.update_layout(
