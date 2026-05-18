@@ -3,11 +3,37 @@ import streamlit as st
 from Core.preprocessor import handle_MissingValue, EDA, handle_outliers
 from components.charts import seaborn_chart, plotly_charts
 
-st.title("Exploratory Data Analysis (EDA)")
+st.title("📊 Exploratory Data Analysis (EDA)")
+st.markdown(
+    """
+    This page is the **Exploratory Data Analysis (EDA)** section of the Streamlit app, used to quickly explore a dataset before modeling.  
+All parts are organized as **accordions/expanders** so you can open each section individually.
 
-if "success_msg" in st.session_state:
-    st.success(st.session_state["success_msg"])
-    del st.session_state["success_msg"]
+### Sections
+
+- **View dataset**
+  - Shows a sample of the dataset rows to inspect the data structure.
+
+- **Information dataset**
+  - Provides general info about the dataset such as number of rows/columns, data types (dtypes), missing values, and memory usage.
+
+- **Describe data**
+  - Displays statistical summaries for numeric columns (mean, standard deviation, min/max, quartiles, etc.).
+
+- **Unique values**
+  - Shows the unique values/counts for columns (especially categorical ones) to understand data diversity.
+
+- **View outlier**
+  - Detects and displays outlier records.  
+  - This section includes an option to **reset the index** of the outliers dataframe so indices are clean and start from 0.
+
+- **Visualization**
+  - Provides plotting tools to explore distributions, patterns, correlations, and relationships between features.
+
+- **Auto EDA**
+  - Generates an automated EDA report (usually with charts and summaries) for quick analysis without manual setup.
+    """
+)
 
 if 'df' in st.session_state:
     df = st.session_state['df']
@@ -33,6 +59,22 @@ if 'df' in st.session_state:
             critical_missing = handle_MissingValue.report_high_missing_value(data=df, threshold=threshold)
             if critical_missing:
                 st.warning(f"High number of missing values: {critical_missing[2]}", icon="⚠️")
+            select_show_missing_value = st.selectbox(
+                "do you show missing values",
+                options=[False, True], index=0, key="select_show_missing_value"
+            )
+            if select_show_missing_value:
+                st.dataframe(
+                    handle_MissingValue.show_missing_values(data=df)
+                )
+            select_axis = st.selectbox(
+                "select delete by row or col",
+                options=["row", "column"], index=0, key="select_axis"
+            )
+            if st.button("delete missing values"):
+                df = handle_MissingValue.remove_missing_values(data=df, axis=select_show_missing_value)
+                st.session_state['df'] = df
+                st.success("✅ ")
 
         if EDA.check_date_in_data(data=df):
             st.warning(f"⚠️The date column is object")
@@ -47,9 +89,18 @@ if 'df' in st.session_state:
             if duplicate > threshold_duplicate:
                 st.warning(f"There are a lot of duplicate values")
             else:
-                st.warning(f"Your data contains duplicate values")
+                st.warning(f"Your data contains duplicate values: {duplicate}")
+            select_show_duplicate_values = st.selectbox(
+                "do you show duplicate values",
+                options=[False, True], index=0, key="select_show_duplicate_values"
+            )
+            if select_show_duplicate_values:
+                st.dataframe(EDA.show_duplicate_values(data=df))
             if st.button("delete duplicate values"):
-                pass
+                df = EDA.delete_duplicate_values(data=df)
+                st.session_state['df'] = df
+                st.success("✅ The date column was successfully updated!")
+                st.rerun()
 
     with st.expander("describe data"):
         describe = EDA.describe_data(data=df)
