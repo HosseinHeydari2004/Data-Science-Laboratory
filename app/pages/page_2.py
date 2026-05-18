@@ -71,20 +71,28 @@ if 'df' in st.session_state:
             "Please select your preferred method",
             options=["IQR", "Z_score"], key="method_selectbox"
         )
+        select_reset_index = st.selectbox(
+            "do you select reset index df outliers",
+            options=[False, True], index=0, key="select_reset_index"
+        )
         outliers = handle_outliers.detect_outliers(
             data=df, col=outliers_col_selectbox, method=method_selectbox
         )
         if len(outliers) > 0:
             if method_selectbox == "IQR":
-                st.dataframe(handle_outliers.detect_outliers(data=df, col=outliers_col_selectbox))
+                st.dataframe(handle_outliers.detect_outliers(
+                    data=df, col=outliers_col_selectbox,
+                    reset_index=select_reset_index))
+
             elif method_selectbox == "Z_score":
                 threshold_outliers = st.slider(
                     "Select outliers Threshold",
                     1.0, 4.0, 3.0
                 )
                 st.dataframe(
-                    handle_outliers.detect_outliers(data=df, col=outliers_col_selectbox, method=method_selectbox,
-                                                    threshold=threshold_outliers)
+                    handle_outliers.detect_outliers(
+                        data=df, col=outliers_col_selectbox, method=method_selectbox,
+                        threshold=threshold_outliers, reset_index=select_reset_index)
                 )
         else:
             st.info(
@@ -575,12 +583,12 @@ if 'df' in st.session_state:
             with st.expander("scatter plot"):
                 select_x = st.selectbox(
                     "please select x",
-                    options=[None] + numeric + category,
+                    options=numeric + category,
                     index=0, key="select_columns_plotly_1"
                 )
                 select_y = st.selectbox(
                     "please select y",
-                    options=[None] + numeric + category,
+                    options=numeric + category,
                     index=0, key="select_columns_plotly_2"
                 )
                 select_color = st.selectbox(
