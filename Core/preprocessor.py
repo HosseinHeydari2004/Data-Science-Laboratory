@@ -138,8 +138,10 @@ class handle_outliers:
     """"""
 
     @classmethod
-    def detect_outliers(cls, data: pd.DataFrame, col: pd.DataFrame, method: str = "IQR",
-                        threshold: int = 3) -> pd.DataFrame:
+    def detect_outliers(
+            cls, data: pd.DataFrame, col: pd.DataFrame, method: str = "IQR",
+            threshold: int = 3, reset_index: bool = False
+    ) -> pd.DataFrame:
         if method == "IQR":
             Q1 = data[col].quantile(q=0.25)
             Q3 = data[col].quantile(q=0.75)
@@ -147,8 +149,14 @@ class handle_outliers:
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             outliers = data[(data[col] < lower_bound) | (data[col] > upper_bound)]
-            return outliers[col].reset_index(drop=True)
+            if reset_index:
+                return outliers[col].reset_index(drop=True)
+            else:
+                return outliers[col]
         elif method == "Z_score":
             z = np.abs(stats.zscore(data[col]))
             outliers_index = np.where(z > threshold)
-            return data.iloc[outliers_index][col].reset_index(drop=True)
+            if reset_index:
+                return data.iloc[outliers_index][col].reset_index(drop=True)
+            else:
+                return data.iloc[outliers_index][col]
