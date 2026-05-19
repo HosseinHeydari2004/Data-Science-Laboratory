@@ -41,15 +41,54 @@ if 'df' in st.session_state:
         select_show_data_mode = st.selectbox(
             "select mode for show data",
             options=[
-                "entire DataFrame",
+                None,
+                "entire dataFrame",
                 "show the first 5 rows",
                 "show the last 5 rows",
                 "show a specific row",
                 "show a random sample of rows",
                 "show a specific column",
-                "show rows from X to Y and columns from A to B"
+                "show rows from x to y and columns from a to b",
+                "filter by value (column == x)",
+                "search text in column",
+                "only numeric columns"
             ], index=0, key="select_show_data_mode"
         )
+        if select_show_data_mode == "entire dataFrame":
+            st.dataframe(data=df)
+        elif select_show_data_mode == "show the first 5 rows":
+            st.dataframe(EDA.show_first_5_row(data=df))
+        elif select_show_data_mode == "show the last 5 rows":
+            st.dataframe(EDA.show_last_5_row(data=df))
+        elif select_show_data_mode == "show a specific row":
+            st.info(f"Please select a range from index 0 to {len(df)}.", icon="ℹ️")
+            select_specific_row = st.number_input(
+                "enter you specific row",
+                value=0, key="select_specific_row"
+            )
+            try:
+                st.dataframe(EDA.show_specific_row(data=df, index=select_specific_row))
+            except:
+                st.error(f"The index you entered is out of bounds. Valid range is 0 to {len(df)}.", icon="⚠️")
+        elif select_show_data_mode == "show a random sample of rows":
+            st.info(f"Please select a range from index 0 to {len(df)}.", icon="ℹ️")
+            select_total_n = st.number_input(
+                "enter total number for show a random sample of rows",
+                value=1, key="select_total_n"
+            )
+            try:
+                st.dataframe(EDA.show_random_sample_rows(data=df, n=select_total_n))
+            except:
+                st.error(f"The index you entered is out of bounds. Valid range is 0 to {len(df)}.", icon="⚠️")
+        elif select_show_data_mode == "show a specific column":
+            select_columns_show = st.selectbox(
+                "select columns to show",
+                options=EDA.list_columns(data=df), key="select_columns_show"
+            )
+            st.dataframe(EDA.show_specific_column(data=df, col_name=select_columns_show))
+        elif select_show_data_mode == "show rows from x to y and columns from a to b":
+            pass
+
 
 
     with st.expander("information dataset"):
