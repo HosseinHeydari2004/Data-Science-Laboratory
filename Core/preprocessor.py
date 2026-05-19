@@ -1,3 +1,5 @@
+from typing import Union, Optional, Any
+
 import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
@@ -118,16 +120,43 @@ class EDA:
 
     @classmethod
     def select_manual_data(
-            cls, data: pd.DataFrame, rows: tuple[int, int], columns: tuple[int, int] | tuple[str, str],
-            mode: str = "Multiple rows and columns", column:str = None, row:int = None
-    ) -> pd.Series | pd.DataFrame:
+            cls,
+            data: pd.DataFrame,
+            rows: tuple[int, int] = (0, 5),
+            columns: Optional[tuple[int, int]] = None,
+            mode: str = "Multiple rows and columns",
+            column_name: Optional[str] = None,
+            row_index: Optional[int] = None,
+            value:Any = None
+    ) -> Union[pd.Series, pd.DataFrame]:
+
         if mode == "Multiple rows and columns":
+            if columns is None:
+                return data.iloc[rows[0]:rows[1], :]
             return data.iloc[rows[0]:rows[1], columns[0]:columns[1]]
+
         elif mode == "Multiple rows and one column":
-            return data.loc[rows[0]:rows[1], column]
+            if column_name:
+                return data[column_name].iloc[rows[0]:rows[1]]
+            return data.iloc[rows[0]:rows[1], 0]
+
         elif mode == "one row and Multiple columns":
-            return data.iloc[row, columns[0]:columns[1]]
-        pass
+            r = row_index if row_index is not None else 0
+            if columns is None:
+                return data.iloc[r, :]
+            return data.iloc[r, columns[0]:columns[1]]
+        elif mode == "filter by value":
+            return data[data[column_name] == value]
+        elif mode == "show only numeric columns":
+            return data.select_dtypes(include=["number"])
+        elif mode == "show only text columns":
+            return data.select_dtypes(include=["object"])
+        elif mode == "search text":
+            return data[data[column_name].astype(str).str.contains(str(value), case=False, na=False)]
+        elif mode == "top n rows by column":
+            return data.nlargest(n=5, columns=column_name)
+
+        return data.head(5)
 
 
 class handle_MissingValue:
