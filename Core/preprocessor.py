@@ -92,6 +92,43 @@ class EDA:
     def col_correlation(cls, data: pd.Series, col1: pd.Series, col2: pd.Series):
         return data[col1].corr(other=data[col2])
 
+    @classmethod
+    def delete_columns(cls, data: pd.DataFrame, col: str | list) -> pd.DataFrame | pd.Series:
+        return data.drop(columns=col)
+
+    @classmethod
+    def show_first_5_row(cls, data: pd.DataFrame) -> pd.DataFrame:
+        return data.head(5)
+
+    @classmethod
+    def show_last_5_row(cls, data: pd.DataFrame) -> pd.DataFrame:
+        return data.tail(5)
+
+    @classmethod
+    def show_specific_row(cls, data: pd.DataFrame, index: int = 0) -> pd.DataFrame | pd.Series:
+        return data.iloc[index]
+
+    @classmethod
+    def show_random_sample_rows(cls, data: pd.DataFrame, n: int = 5) -> pd.DataFrame | pd.Series:
+        return data.sample(n=n)
+
+    @classmethod
+    def show_specific_column(cls, data: pd.DataFrame, col_name: str) -> pd.Series:
+        return data[col_name]
+
+    @classmethod
+    def select_manual_data(
+            cls, data: pd.DataFrame, rows: tuple[int, int], columns: tuple[int, int] | tuple[str, str],
+            mode: str = "Multiple rows and columns", column:str = None, row:int = None
+    ) -> pd.Series | pd.DataFrame:
+        if mode == "Multiple rows and columns":
+            return data.iloc[rows[0]:rows[1], columns[0]:columns[1]]
+        elif mode == "Multiple rows and one column":
+            return data.loc[rows[0]:rows[1], column]
+        elif mode == "one row and Multiple columns":
+            return data.iloc[row, columns[0]:columns[1]]
+        pass
+
 
 class handle_MissingValue:
     """
@@ -126,15 +163,17 @@ class handle_MissingValue:
         else:
             return data.dropna(axis=1)
 
-
     @classmethod
     def find_high_col_missing_values(cls, data: pd.DataFrame, threshold: int = 30) -> dict:
         percent_missing = (data.isna().sum() / len(data)) * 100
         return percent_missing[percent_missing > threshold].to_dict()
 
     @classmethod
-    def show_missing_values(cls, data: pd.DataFrame) -> pd.Series | pd.DataFrame:
-        return data[data.isna().any(axis=1)]
+    def show_missing_values(cls, data: pd.DataFrame, reset_index: bool = False) -> pd.Series | pd.DataFrame:
+        if reset_index:
+            return data[data.isna().any(axis=1)].reset_index(drop=True)
+        else:
+            return data[data.isna().any(axis=1)]
 
     @classmethod
     def fill_SimpleImputer(
