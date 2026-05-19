@@ -38,7 +38,20 @@ All parts are organized as **accordions/expanders** so you can open each section
 if 'df' in st.session_state:
     df = st.session_state['df']
     with st.expander("view dataset"):
-        st.dataframe(df)
+        select_show_data_mode = st.selectbox(
+            "select mode for show data",
+            options=[
+                "entire DataFrame",
+                "show the first 5 rows",
+                "show the last 5 rows",
+                "show a specific row",
+                "show a random sample of rows",
+                "show a specific column",
+                "show rows from X to Y and columns from A to B"
+            ], index=0, key="select_show_data_mode"
+        )
+
+
     with st.expander("information dataset"):
         st.dataframe(EDA.information_data(data=df))
         missing_value = handle_MissingValue.check_missing_values(data=df)
@@ -48,7 +61,8 @@ if 'df' in st.session_state:
                 """Important Note:
                 If the count of missing values is below the threshold, rows should be dropped.
                 Otherwise, columns should be dropped.
-                """, icon="⚠️"
+                """,
+                icon="⚠️"
             )
             critical_missing_cols = handle_MissingValue.find_high_col_missing_values(data=df, threshold=threshold)
             if critical_missing_cols.keys():
@@ -59,22 +73,39 @@ if 'df' in st.session_state:
             critical_missing = handle_MissingValue.report_high_missing_value(data=df, threshold=threshold)
             if critical_missing:
                 st.warning(f"High number of missing values: {critical_missing[2]}", icon="⚠️")
+
             select_show_missing_value = st.selectbox(
                 "do you show missing values",
                 options=[False, True], index=0, key="select_show_missing_value"
             )
             if select_show_missing_value:
+                select_reset_index = st.selectbox(
+                    "do you reset index",
+                    options=[False, True], index=0, key="select_reset_index2"
+                )
                 st.dataframe(
-                    handle_MissingValue.show_missing_values(data=df)
+                    handle_MissingValue.show_missing_values(data=df, reset_index=select_reset_index)
                 )
             select_axis = st.selectbox(
                 "select delete by row or col",
                 options=["row", "column"], index=0, key="select_axis"
             )
-            if st.button("delete missing values"):
-                df = handle_MissingValue.remove_missing_values(data=df, axis=select_show_missing_value)
-                st.session_state['df'] = df
-                st.success("✅ ")
+            if select_axis == "row":
+                if st.button("delete missing values"):
+                    df = handle_MissingValue.remove_missing_values(data=df, axis="row")
+                    st.session_state['df'] = df
+                    st.success("✅ Missing values removed successfully!")
+                    st.rerun()
+            elif select_axis == "column":
+                select_col_to_delete = st.multiselect(
+                    "select columns to delete",
+                    options=critical_missing_cols.keys(), key="select_col_to_delete"
+                )
+                if st.button("delete missing values"):
+                    df = EDA.delete_columns(data=df, col=select_col_to_delete)
+                    st.session_state['df'] = df
+                    st.success("✅ Missing values removed successfully!")
+                    st.rerun()
 
         if EDA.check_date_in_data(data=df):
             st.warning(f"⚠️The date column is object")
@@ -99,7 +130,7 @@ if 'df' in st.session_state:
             if st.button("delete duplicate values"):
                 df = EDA.delete_duplicate_values(data=df)
                 st.session_state['df'] = df
-                st.success("✅ The date column was successfully updated!")
+                st.success("✅ Duplicate values deleted successfully!")
                 st.rerun()
 
     with st.expander("describe data"):
