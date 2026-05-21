@@ -44,7 +44,7 @@ if uploaded_file is not None:
         with open(full_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
 
-        st.success(f"File saved to: {full_path}")
+        st.success(f"File saved to: '{full_path}'")
         if file_name.endswith(".csv"):
             df = pd.read_csv(full_path)
         else:
