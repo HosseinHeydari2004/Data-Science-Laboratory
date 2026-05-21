@@ -1,4 +1,4 @@
-from typing import Union, Optional, Any
+from typing import Optional, Any
 
 import numpy as np
 import pandas as pd
@@ -40,7 +40,7 @@ class EDA:
 
     @classmethod
     def describe_data(cls, data: pd.DataFrame) -> pd.DataFrame:
-        return data.describe(include="all").rename({"top": "mode"}).T
+        return data.describe(include="all").rename({"top": "mode"})
 
     @classmethod
     def check_date_in_data(cls, data: pd.DataFrame) -> bool | tuple[bool, list]:
@@ -119,16 +119,26 @@ class EDA:
         return data[col_name]
 
     @classmethod
+    def check_dtype_column(cls, data: pd.DataFrame | pd.Series, col: object) -> int:
+        category = data.select_dtypes(include=["object"])
+        numeric = data.select_dtypes(include=["number"])
+        if col in category:
+            return 0
+        elif col in numeric:
+            return 1
+
+    @classmethod
     def select_manual_data(
             cls,
             data: pd.DataFrame,
             rows: tuple[int, int] = (0, 5),
             columns: Optional[tuple[int, int]] = None,
             mode: str = "Multiple rows and columns",
-            column_name: Optional[str] = None,
+            column_name: Optional[str] | object = None,
             row_index: Optional[int] = None,
-            value:Any = None
-    ) -> Union[pd.Series, pd.DataFrame]:
+            value: Any = None,
+            query: str = ""
+    ) -> Any:
 
         if mode == "Multiple rows and columns":
             if columns is None:
@@ -136,27 +146,21 @@ class EDA:
             return data.iloc[rows[0]:rows[1], columns[0]:columns[1]]
 
         elif mode == "Multiple rows and one column":
-            if column_name:
+            if isinstance(column_name, str):
                 return data[column_name].iloc[rows[0]:rows[1]]
             return data.iloc[rows[0]:rows[1], 0]
 
         elif mode == "one row and Multiple columns":
-            r = row_index if row_index is not None else 0
             if columns is None:
-                return data.iloc[r, :]
-            return data.iloc[r, columns[0]:columns[1]]
+                return data.iloc[row_index, :]
+            return data.iloc[row_index, columns[0]:columns[1]]
         elif mode == "filter by value":
             return data[data[column_name] == value]
-        elif mode == "show only numeric columns":
-            return data.select_dtypes(include=["number"])
-        elif mode == "show only text columns":
-            return data.select_dtypes(include=["object"])
         elif mode == "search text":
             return data[data[column_name].astype(str).str.contains(str(value), case=False, na=False)]
-        elif mode == "top n rows by column":
-            return data.nlargest(n=5, columns=column_name)
-
-        return data.head(5)
+        elif mode == "query":
+            qy = data.query(expr=query)
+            return qy
 
 
 class handle_MissingValue:
