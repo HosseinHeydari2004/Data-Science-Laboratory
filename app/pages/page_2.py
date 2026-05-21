@@ -1,5 +1,6 @@
 import streamlit as st
-
+from Untils.Until import Auto_EDA
+import streamlit.components.v1 as components
 from Core.preprocessor import handle_MissingValue, EDA, handle_outliers
 from components.charts import seaborn_chart, plotly_charts
 
@@ -921,7 +922,9 @@ if 'df' in st.session_state:
                 )
 
     with st.expander("Auto EDA"):
-        pass
+        with st.spinner("Analyzing the data…"):
+            report_html = Auto_EDA(df)
+            components.html(report_html, height=600,scrolling=True)
 
 
 
