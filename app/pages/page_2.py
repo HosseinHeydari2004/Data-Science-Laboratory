@@ -41,7 +41,6 @@ if 'df' in st.session_state:
         select_show_data_mode = st.selectbox(
             "select mode for show data",
             options=[
-                None,
                 "entire dataFrame",
                 "show the first 5 rows",
                 "show the last 5 rows",
@@ -51,7 +50,7 @@ if 'df' in st.session_state:
                 "show rows from x to y and columns from a to b",
                 "filter by value (column == x)",
                 "search text in column",
-                "only numeric columns"
+                "search with query"
             ], index=0, key="select_show_data_mode"
         )
         if select_show_data_mode == "entire dataFrame":
@@ -87,7 +86,144 @@ if 'df' in st.session_state:
             )
             st.dataframe(EDA.show_specific_column(data=df, col_name=select_columns_show))
         elif select_show_data_mode == "show rows from x to y and columns from a to b":
-            pass
+            select_mode_show_data_manual = st.selectbox(
+                "select mode",
+                options=[
+                    None,
+                    "Multiple rows and columns",
+                    "Multiple rows and one column",
+                    "one row and Multiple columns"
+                ], key="select_mode_show_data_manual"
+            )
+            if select_mode_show_data_manual == "Multiple rows and columns":
+                select_row_start = st.number_input(
+                    "start from row",
+                    min_value=0, max_value=len(df), value=0, key="select_row_start"
+                )
+                select_row_up = st.number_input(
+                    "up to row",
+                    min_value=0, max_value=len(df), value=1, key="select_row_up"
+                )
+                select_col_start = st.number_input(
+                    "start from column",
+                    min_value=0, max_value=len(EDA.list_columns(data=df)), value=None,
+                    key="select_col_start"
+                )
+                select_col_up = st.number_input(
+                    "up to column",
+                    min_value=0, max_value=len(EDA.list_columns(data=df)), value=None,
+                    key="select_col_up"
+                )
+                if (select_col_start is None) and (select_col_up is None):
+                    st.dataframe(EDA.select_manual_data(
+                        data=df, rows=(select_row_start, select_row_up),
+                    ))
+                else:
+                    st.dataframe(EDA.select_manual_data(
+                        data=df, rows=(select_row_start, select_row_up),
+                        columns=(select_col_start, select_col_up)
+                    ))
+            elif select_mode_show_data_manual == "Multiple rows and one column":
+                select_row_start = st.number_input(
+                    "start from row",
+                    min_value=0, max_value=len(df), value=0, key="select_row_start"
+                )
+                select_row_up = st.number_input(
+                    "up to row",
+                    min_value=0, max_value=len(df), value=1, key="select_row_up"
+                )
+                select_col_name = st.selectbox(
+                    "select column name to show",
+                    options=EDA.list_columns(data=df), key="select_col_name"
+                )
+                st.dataframe(
+                    EDA.select_manual_data(
+                        data=df, rows=(select_row_start, select_row_up),
+                        column_name=select_col_name, mode="Multiple rows and one column"
+                    )
+                )
+            elif select_mode_show_data_manual == "one row and Multiple columns":
+                select_row_index = st.number_input(
+                    "select row",
+                    min_value=0, max_value=len(df), value=0
+                )
+                select_col_start = st.number_input(
+                    "start from column",
+                    min_value=0, max_value=len(EDA.list_columns(data=df)), value=None,
+                    key="select_col_start2"
+                )
+                select_col_up = st.number_input(
+                    "up to column",
+                    min_value=0, max_value=len(EDA.list_columns(data=df)), value=None,
+                    key="select_col_up2"
+                )
+                if (select_col_start is None) and (select_col_up is None):
+                    st.dataframe(EDA.select_manual_data(
+                        data=df, row_index=select_row_index,
+                        mode="one row and Multiple columns",
+
+                    ))
+                else:
+                    st.dataframe(EDA.select_manual_data(
+                        data=df, row_index=select_row_index,
+                        columns=(select_col_start, select_col_up),
+                        mode="one row and Multiple columns",
+
+                    ))
+        elif select_show_data_mode == "filter by value (column == x)":
+            select_col_name = st.selectbox(
+                "select column name",
+                options=EDA.list_columns(data=df),
+                key="select_col_name3"
+            )
+            if EDA.check_dtype_column(data=df, col=select_col_name) == 0:
+                select_object_value = st.text_input(
+                    "select value",
+                    key="select_object_value"
+                )
+                st.dataframe(
+                    EDA.select_manual_data(
+                        data=df, mode="filter by value",
+                        column_name=select_col_name, value=select_object_value
+                    )
+                )
+            else:
+                select_number_value = st.number_input(
+                    "select value",
+                    key="select_number_value"
+                )
+                st.dataframe(
+                    EDA.select_manual_data(
+                        data=df, mode="filter by value",
+                        column_name=select_col_name, value=select_number_value
+                    )
+                )
+        elif select_show_data_mode == "search text in column":
+            select_col_object = st.selectbox(
+                "select column name",
+                options=EDA.list_columns(data=df),
+                key="select_col_object", index=0
+            )
+            select_object_value = st.text_input(
+                "select value",
+                key="select_object_value2"
+            )
+            st.write(EDA.select_manual_data(
+                data=df, column_name=select_col_object,
+                value=select_object_value, mode="search text"
+            ))
+        elif select_show_data_mode == "search with query":
+            enter_query = st.text_input(
+                "enter your query",
+            )
+            try:
+                st.dataframe(
+                    EDA.select_manual_data(
+                        data=df, query=enter_query, mode="query"
+                    )
+                )
+            except Exception as E:
+                st.error(f"{E}")
 
 
 
