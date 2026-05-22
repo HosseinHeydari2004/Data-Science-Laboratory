@@ -2,6 +2,7 @@ from typing import Optional, Any
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype
 from pandas.io.formats.style import Styler
 from scipy import stats
 from sklearn.impute import SimpleImputer
@@ -43,19 +44,18 @@ class EDA:
         return data.describe(include="all").rename({"top": "mode"})
 
     @classmethod
-    def check_date_in_data(cls, data: pd.DataFrame) -> bool | tuple[bool, list]:
+    def check_date_object(cls, data: pd.DataFrame) -> bool | tuple[bool, str]:
         date_cols = [c for c in data.columns if c in ["date", "datetime", "Date", "Datetime"]]
-        if date_cols:
-            target_col = date_cols[0]
-            data[target_col] = pd.to_datetime(data[target_col])
-            return True, date_cols
-        return False
+        if is_datetime64_any_dtype(data[date_cols[0]]):
+            return False
+        else:
+            return True, date_cols[0]
 
     @classmethod
     def change_dtype_datetime64(cls, data: pd.DataFrame) -> pd.DataFrame:
-        if EDA.check_date_in_data(data=data)[0]:
-            data[EDA.check_date_in_data(data=data)[1][0]] = pd.to_datetime(
-                data[EDA.check_date_in_data(data=data)[1][0]])
+        ch, data_col = EDA.check_date_object(data=data)
+        if ch:
+            data[data_col] = pd.to_datetime(data[data_col], errors="coerce")
             return data
 
     @classmethod
@@ -227,8 +227,9 @@ class handle_outliers:
 
     @classmethod
     def detect_outliers(
-            cls, data: pd.DataFrame, col: pd.DataFrame, method: str = "IQR",
-            threshold: int = 3, reset_index: bool = False
+            cls, data: pd.DataFrame, col: pd.DataFrame | str | object,
+            method: str | object = "IQR",
+            threshold: int = 3
     ) -> pd.DataFrame:
         if method == "IQR":
             Q1 = data[col].quantile(q=0.25)
@@ -237,14 +238,14 @@ class handle_outliers:
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             outliers = data[(data[col] < lower_bound) | (data[col] > upper_bound)]
-            if reset_index:
-                return outliers[col].reset_index(drop=True)
-            else:
-                return outliers[col]
+            return outliers[col]
         elif method == "Z_score":
             z = np.abs(stats.zscore(data[col]))
             outliers_index = np.where(z > threshold)
-            if reset_index:
-                return data.iloc[outliers_index][col].reset_index(drop=True)
-            else:
-                return data.iloc[outliers_index][col]
+            return data.iloc[outliers_index][col]
+
+    @classmethod
+    def delete_outliers(
+            cls, data: pd.DataFrame, index_outliers: Any
+    ) -> pd.DataFrame:
+        return data.drop(index=index_outliers, errors='ignore')
