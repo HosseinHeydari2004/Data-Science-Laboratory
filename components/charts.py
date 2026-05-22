@@ -433,3 +433,34 @@ class plotly_charts:
             template=template
         )
         return fig
+
+    @classmethod
+    def histogram(
+            cls, data: pd.DataFrame, x: pd.Series | pd.DataFrame | str | object = None,
+            y: pd.DataFrame | pd.Series | str | object = None,
+            color: pd.DataFrame | pd.Series | str | object = None,
+            log_x: bool | object = False, nbins: int = None,
+            log_y: bool | object = True, figsize: tuple[int, int] = (900, 600),
+            main_title: str = "", xlabel: str = "",
+            ylabel: str = "", main_title_fontsize: int = 15,
+            xlabel_fontsize: int = 12, ylabel_fontsize: int = 12,
+            tickfont_x: int = 14, tickfont_y: int = 14,
+            template: str | object = None, bargap: float = 0.1
+    ) -> plt.Figure:
+        fig = px.histogram(
+            data_frame=data, x=x, y=y, color=color,
+            log_x=log_x, log_y=log_y,
+            nbins=nbins, width=figsize[0], height=figsize[1],
+
+        )
+        fig.update_layout(
+            title=main_title,
+            title_font=dict(size=main_title_fontsize),
+            xaxis_title=xlabel,
+            yaxis_title=ylabel,
+            xaxis=dict(tickfont=dict(size=tickfont_x), title_font=dict(size=xlabel_fontsize)),
+            yaxis=dict(tickfont=dict(size=tickfont_y), title_font=dict(size=ylabel_fontsize)),
+            template=template,
+            bargap=bargap
+        )
+        return fig
