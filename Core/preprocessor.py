@@ -46,7 +46,7 @@ class EDA:
     @classmethod
     def check_date_object(cls, data: pd.DataFrame) -> bool | tuple[bool, str]:
         date_cols = [c for c in data.columns if c in ["date", "datetime", "Date", "Datetime"]]
-        if is_datetime64_any_dtype(data[date_cols[0]]):
+        if not date_cols or is_datetime64_any_dtype(data[date_cols[0]]):
             return False
         else:
             return True, date_cols[0]
