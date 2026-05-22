@@ -34,7 +34,8 @@ os.makedirs(SAVE_PATH, exist_ok=True)
 uploaded_file = st.file_uploader(
     "Select a CSV or Excel file:",
     type=['csv', 'xlsx'],
-    key="home_page_uploader"
+    key="home_page_uploader",
+    max_upload_size=5
 )
 
 if uploaded_file is not None:
