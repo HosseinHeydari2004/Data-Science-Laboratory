@@ -1,7 +1,8 @@
 import streamlit as st
-from Untils.Until import Auto_EDA
 import streamlit.components.v1 as components
+
 from Core.preprocessor import handle_MissingValue, EDA, handle_outliers
+from Untils.Until import Auto_EDA
 from components.charts import seaborn_chart, plotly_charts
 
 st.title("📊 Exploratory Data Analysis (EDA)")
@@ -225,8 +226,6 @@ if 'df' in st.session_state:
                 )
             except Exception as E:
                 st.error(f"{E}")
-
-
 
     with st.expander("information dataset"):
         st.dataframe(EDA.information_data(data=df))
@@ -669,7 +668,7 @@ if 'df' in st.session_state:
                     )
                 )
 
-            with st.expander("violin_plot"):
+            with st.expander("violin plot"):
                 select_x = st.selectbox(
                     "please select x",
                     options=[None] + numeric + category, index=0, key="select_columns_k8"
@@ -920,11 +919,90 @@ if 'df' in st.session_state:
 
                     )
                 )
+            with st.expander("histogram"):
+                select_x = st.selectbox(
+                    "please select x",
+                    options=numeric + category,
+                    index=0, key="select_x_plotly_hi"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + numeric + category,
+                    index=0, key="select_y_plotly_hi"
+                )
+                select_color = st.selectbox(
+                    "please select color",
+                    options=[None] + numeric + category,
+                    index=0, key="select_color_plotly_hi"
+                )
+                select_log_x = st.selectbox(
+                    "please select log x",
+                    options=[False, True], index=0, key="select_log_x_plotly_hi"
+                )
+                select_log_y = st.selectbox(
+                    "please select log y",
+                    options=[False, True], index=0, key="select_log_y_plotly_hi"
+                )
+                select_template = st.selectbox(
+                    "please select template",
+                    options=[
+                        "plotly", "plotly_white", "plotly_dark",
+                        "ggplot2", "seaborn", "simple_white",
+                        "presentation", "none"
+                    ],
+                    index=0, key="select_template_plotly_hi"
+                )
+                select_width = st.number_input("please enter width figure:", value=900, key="select_width10")
+                select_height = st.number_input("please enter height figure:", value=500, key="select_height10")
+                select_nbins = st.number_input("please enter number of bins:", value=60, max_value=300,
+                                               key="select_nbins", min_value=30)
+                select_bargap = st.slider(
+                    "please enter bar gap",
+                    min_value=0.1, max_value=10.0, value=0.1, step=0.1,
+                    key="bar gap histogram"
+                )
+                select_main_title = st.text_input("please enter main title:", key="select_main_title10")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel10")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel10")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize10")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize10")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize10")
+                select_tickfont_x = st.number_input(
+                    "please enter x axis size:", value=13, key="select_tickfont_x_2")
+                select_tickfont_y = st.number_input(
+                    "please enter y axis size:", value=13, key="select_tickfont_y_2")
+                st.plotly_chart(
+                    plotly_charts.histogram(
+                        data=df, x=select_x, y=select_y,
+                        color=select_color,
+                        log_x=select_log_x, log_y=select_log_y,
+                        nbins=select_nbins, figsize=(select_width, select_height),
+                        main_title=select_main_title, xlabel=select_xlabel, ylabel=select_ylabel,
+                        main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        tickfont_x=select_tickfont_x, tickfont_y=select_tickfont_y,
+                        template=select_template, bargap=select_bargap
+                    )
+                )
+
+            with st.expander("kde plot"):
+                pass
+            with st.expander("box plot"):
+                pass
+            with st.expander("violin plot"):
+                pass
+            with st.expander("line plot"):
+                pass
+            with st.expander("heatmap"):
+                pass
 
     with st.expander("Auto EDA"):
         with st.spinner("Analyzing the data…"):
             report_html = Auto_EDA(df)
-            components.html(report_html, height=600,scrolling=True)
+            components.html(report_html, height=600, scrolling=True)
 
 
 
