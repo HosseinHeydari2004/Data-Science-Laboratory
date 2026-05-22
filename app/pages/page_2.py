@@ -282,12 +282,13 @@ if 'df' in st.session_state:
                     st.success("✅ Missing values removed successfully!")
                     st.rerun()
 
-        if EDA.check_date_in_data(data=df):
+        if EDA.check_date_object(data=df):
             st.warning(f"⚠️The date column is object")
             if st.button("change to Datetime", icon="↘️", help="change data type"):
                 df = EDA.change_dtype_datetime64(data=df)
                 st.session_state['df'] = df
                 st.success("✅ The date column was successfully updated!")
+                st.rerun()
 
         duplicate = EDA.get_duplicate(data=df)
         if duplicate:
@@ -328,18 +329,23 @@ if 'df' in st.session_state:
             "Please select your preferred method",
             options=["IQR", "Z_score"], key="method_selectbox"
         )
-        select_reset_index = st.selectbox(
-            "do you select reset index df outliers",
-            options=[False, True], index=0, key="select_reset_index"
-        )
-        outliers = handle_outliers.detect_outliers(
+        outlier = handle_outliers.detect_outliers(
             data=df, col=outliers_col_selectbox, method=method_selectbox
         )
-        if len(outliers) > 0:
+        if len(outlier) > 0:
             if method_selectbox == "IQR":
-                st.dataframe(handle_outliers.detect_outliers(
-                    data=df, col=outliers_col_selectbox,
-                    reset_index=select_reset_index))
+                st.dataframe(outlier)
+                select_delete_outliers = st.selectbox(
+                    "are you delete outliers",
+                    options=[False, True], index=0, key="select_delete_outliers"
+                )
+                if select_delete_outliers:
+                    df = handle_outliers.delete_outliers(
+                        data=df, index_outliers=outlier.index
+                    )
+                    st.session_state['df'] = df
+                    st.success(f"outliers deleted", icon="✅")
+                    st.rerun()
 
             elif method_selectbox == "Z_score":
                 threshold_outliers = st.slider(
@@ -349,12 +355,24 @@ if 'df' in st.session_state:
                 st.dataframe(
                     handle_outliers.detect_outliers(
                         data=df, col=outliers_col_selectbox, method=method_selectbox,
-                        threshold=threshold_outliers, reset_index=select_reset_index)
+                        threshold=threshold_outliers)
                 )
+                select_delete_outliers = st.selectbox(
+                    "are you delete outliers",
+                    options=[False, True], index=0, key="select_delete_outliers2"
+                )
+                if select_delete_outliers:
+                    df = handle_outliers.delete_outliers(data=df, index_outliers=outlier.index)
+                    st.session_state['df'] = df
+                    st.success(f"outliers deleted", icon="✅")
+                    st.rerun()
+
         else:
             st.info(
                 f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
             )
+    with st.expander("Data Manipulation"):
+        pass
     with st.expander("Visualization"):
         numeric = EDA.detect_numeric_type(data=df)
         category = EDA.detect_object_type(data=df)
@@ -1000,9 +1018,14 @@ if 'df' in st.session_state:
                 pass
 
     with st.expander("Auto EDA"):
-        with st.spinner("Analyzing the data…"):
-            report_html = Auto_EDA(df)
-            components.html(report_html, height=600, scrolling=True)
+        select_Auto_EDA_mode = st.selectbox(
+            "are you create Auto EDA",
+            options=[False, True], index=0, key="select_Auto_EDA_mode"
+        )
+        if select_Auto_EDA_mode:
+            with st.spinner("Analyzing the data…"):
+                report_html = Auto_EDA(df)
+                components.html(report_html, height=600, scrolling=True)
 
 
 
