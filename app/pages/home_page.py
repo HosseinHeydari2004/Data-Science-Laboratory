@@ -35,24 +35,23 @@ uploaded_file = st.file_uploader(
     "Select a CSV or Excel file:",
     type=['csv', 'xlsx'],
     key="home_page_uploader",
-    max_upload_size=5
+    help="upload your data up to limit 5MB"
 )
 
 if uploaded_file is not None:
-    try:
-        file_name = uploaded_file.name
-        full_path = os.path.join(SAVE_PATH, file_name)
-        with open(full_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+    if uploaded_file.name.endswith(".csv"):
+        df = pd.read_csv(uploaded_file)
+    else:
+        df = pd.read_excel(uploaded_file)
+    st.session_state['df'] = df
+    st.success(f"File '{uploaded_file.name}' loaded successfully!", icon="✅")
+    if st.button("save data in local", icon="💾", help=f"save your data in '{SAVE_PATH}'"):
+        try:
+            full_path = os.path.join(SAVE_PATH, uploaded_file.name)
 
-        st.success(f"File saved to: '{full_path}'")
-        if file_name.endswith(".csv"):
-            df = pd.read_csv(full_path)
-        else:
-            df = pd.read_excel(full_path)
-
-        st.session_state['df'] = df
-        st.success(f"File '{file_name}' uploaded and saved successfully!")
-
-    except Exception as e:
-        st.error(f"Error processing file: {e}")
+            uploaded_file.seek(0)
+            with open(full_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success(f"File saved to: '{full_path}'", icon="✅")
+        except Exception as e:
+            st.error(f"Error saving file: {e}")
