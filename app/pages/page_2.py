@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-from Core.preprocessor import handle_MissingValue, EDA, handle_outliers
+from Core.preprocessor import handle_MissingValue, EDA, handle_outliers, data_manipulation
 from Untils.Until import Auto_EDA
 from components.charts import seaborn_chart, plotly_charts
 
@@ -371,8 +371,58 @@ if 'df' in st.session_state:
             st.info(
                 f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
             )
-    with st.expander("Data Manipulation"):
-        pass
+    with st.expander("Data manipulation"):
+        select_manipulation_mode = st.selectbox(
+            "select manipulation mode",
+            options=[
+                "delete row or rows",
+                "delete column or columns",
+                "change name columns",
+                "change data type"
+            ], index=0, key="select_manipulation_mode"
+        )
+        if select_manipulation_mode == "delete row or rows":
+            select_delete_row_mode = st.selectbox(
+                "select delete row or rows",
+                options=["row", "rows"], index=0, key="select_delete_row_mode"
+            )
+            if select_delete_row_mode == "row":
+                select_row = st.number_input(
+                    "select row to delete",
+                    min_value=0, max_value=len(df) - 1, value=0,
+                    key="select_row"
+                )
+
+                if st.button("delete row"):
+                    try:
+                        df = data_manipulation.delete_row(data=df, row_index=select_row)
+                        st.success(f"row {select_row} deleted", icon="✅")
+                        st.session_state['df'] = df
+                        st.rerun()
+                    except Exception as E:
+                        st.error(f"row {str(E)} not founded!", icon="⚠️")
+            elif select_delete_row_mode == "rows":
+                start_rows = st.number_input(
+                    "start row",
+                    min_value=0, max_value=len(df) - 1, value=0,
+                    key="start_rows"
+                )
+                end_rows = st.number_input(
+                    "end row",
+                    min_value=0, max_value=len(df) - 1, value=1,
+                    key="end_rows"
+                )
+                if st.button("delete rows"):
+                    df = data_manipulation.delete_rows(data=df, rows_index=(start_rows, end_rows))
+                    st.session_state['df'] = df
+                    st.success(f"rows {(start_rows, end_rows)} deleted", icon="✅")
+                    st.rerun()
+        elif select_manipulation_mode == "delete column or columns":
+            pass
+        elif select_manipulation_mode == "change name columns":
+            pass
+        elif select_manipulation_mode == "change data type":
+            pass
     with st.expander("Visualization"):
         numeric = EDA.detect_numeric_type(data=df)
         category = EDA.detect_object_type(data=df)
@@ -1026,6 +1076,8 @@ if 'df' in st.session_state:
             with st.spinner("Analyzing the data…"):
                 report_html = Auto_EDA(df)
                 components.html(report_html, height=600, scrolling=True)
+    if st.button("save data"):
+        pass
 
 
 
