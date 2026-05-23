@@ -270,3 +270,17 @@ class data_manipulation:
         if not all(i in data.index for i in indices_to_drop):
             raise ValueError(f"rows {rows_index} not founded!")
         return data.drop(index=indices_to_drop).reset_index(drop=True)
+
+    @classmethod
+    def delete_column(cls, data: pd.DataFrame, col: str | pd.Series | object) -> pd.DataFrame | Exception:
+        if col in data.columns:
+            return data.drop(columns=col)
+        else:
+            raise ValueError(f"column {col} not founded!")
+
+    @classmethod
+    def delete_columns(cls, data: pd.DataFrame, list_col: list[str] | object) -> pd.DataFrame:
+        missing_cols = [col for col in list_col if col not in data.columns]
+        if missing_cols:
+            raise ValueError(f"Columns not found: {', '.join(missing_cols)}")
+        return data.drop(columns=list_col)
