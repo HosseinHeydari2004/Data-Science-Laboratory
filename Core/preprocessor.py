@@ -2,6 +2,7 @@ from typing import Optional, Any
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.io.formats.style import Styler
 from scipy import stats
@@ -248,4 +249,24 @@ class handle_outliers:
     def delete_outliers(
             cls, data: pd.DataFrame, index_outliers: Any
     ) -> pd.DataFrame:
-        return data.drop(index=index_outliers, errors='ignore')
+        return data.drop(index=index_outliers, errors='ignore').reset_index(drop=True)
+
+
+class data_manipulation:
+    @classmethod
+    def delete_row(
+            cls, data: pd.DataFrame, row_index: int | object | pd.Series = None
+    ) -> DataFrame | None | Exception:
+        if row_index not in data.index:
+            raise ValueError(f"row {row_index} not founded!")
+        return data.drop(index=row_index).reset_index(drop=True)
+
+    @classmethod
+    def delete_rows(
+            cls, data: pd.DataFrame, rows_index: tuple[int, int] = None
+    ) -> pd.DataFrame | None | Exception:
+        start, end = rows_index
+        indices_to_drop = list(range(start, end + 1))
+        if not all(i in data.index for i in indices_to_drop):
+            raise ValueError(f"rows {rows_index} not founded!")
+        return data.drop(index=indices_to_drop).reset_index(drop=True)
