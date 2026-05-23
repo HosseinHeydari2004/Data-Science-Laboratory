@@ -413,12 +413,46 @@ if 'df' in st.session_state:
                     key="end_rows"
                 )
                 if st.button("delete rows"):
-                    df = data_manipulation.delete_rows(data=df, rows_index=(start_rows, end_rows))
-                    st.session_state['df'] = df
-                    st.success(f"rows {(start_rows, end_rows)} deleted", icon="✅")
-                    st.rerun()
+                    try:
+                        df = data_manipulation.delete_rows(data=df, rows_index=(start_rows, end_rows))
+                        st.session_state['df'] = df
+                        st.success(f"rows {(start_rows, end_rows)} deleted", icon="✅")
+                        st.rerun()
+                    except Exception as E:
+                        st.error(f"rows {(start_rows, end_rows)} not founded!")
         elif select_manipulation_mode == "delete column or columns":
-            pass
+            select_delete_cols = st.selectbox(
+                "select delete column or columns",
+                options=["column", "columns"], index=0, key="select_delete_cols"
+            )
+            if select_delete_cols == "column":
+                select_col = st.selectbox(
+                    "select column to delete",
+                    options=[None] + EDA.list_columns(data=df), key="select_col", index=0
+                )
+                if st.button("delete column"):
+                    try:
+                        df = data_manipulation.delete_column(data=df, col=select_col)
+                        st.success(f"column {select_col} deleted!", icon="✅")
+                        st.session_state['df'] = df
+                        st.rerun()
+                    except Exception as E:
+                        st.error(f"{E}")
+            elif select_delete_cols == "columns":
+                select_cols = st.multiselect(
+                    "select columns",
+                    options=EDA.list_columns(data=df), key="select_cols"
+                )
+                if st.button("delete columns"):
+                    try:
+                        df = data_manipulation.delete_columns(
+                            data=df, list_col=select_cols
+                        )
+                        st.success(f"delete {select_cols} deleted", icon="✅")
+                        st.session_state['df'] = df
+                        st.rerun()
+                    except Exception as E:
+                        st.error(f"{E}")
         elif select_manipulation_mode == "change name columns":
             pass
         elif select_manipulation_mode == "change data type":
