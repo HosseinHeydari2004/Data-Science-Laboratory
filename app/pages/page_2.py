@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
-
+from Untils.Until import save_data
 from Core.preprocessor import handle_MissingValue, EDA, handle_outliers, data_manipulation
 from Untils.Until import Auto_EDA
 from components.charts import seaborn_chart, plotly_charts
@@ -329,11 +329,12 @@ if 'df' in st.session_state:
             "Please select your preferred method",
             options=["IQR", "Z_score"], key="method_selectbox"
         )
-        outlier = handle_outliers.detect_outliers(
-            data=df, col=outliers_col_selectbox, method=method_selectbox
-        )
-        if len(outlier) > 0:
-            if method_selectbox == "IQR":
+        if method_selectbox == "IQR":
+            outlier = handle_outliers.detect_outliers(
+                data=df, col=outliers_col_selectbox,
+                method="IQR"
+            )
+            if len(outlier) > 0:
                 st.dataframe(outlier)
                 select_delete_outliers = st.selectbox(
                     "are you delete outliers",
@@ -346,8 +347,17 @@ if 'df' in st.session_state:
                     st.session_state['df'] = df
                     st.success(f"outliers deleted", icon="✅")
                     st.rerun()
+            else:
+                st.info(
+                    f"In the IQR method, there are no outliers in '{outliers_col_selectbox}'"
+                )
 
-            elif method_selectbox == "Z_score":
+        elif method_selectbox == "Z_score":
+            outlier = handle_outliers.detect_outliers(
+                data=df, col=outliers_col_selectbox,
+                method="Z_score",
+            )
+            if len(outlier) > 0:
                 threshold_outliers = st.slider(
                     "Select outliers Threshold",
                     1.0, 4.0, 3.0
@@ -366,11 +376,9 @@ if 'df' in st.session_state:
                     st.session_state['df'] = df
                     st.success(f"outliers deleted", icon="✅")
                     st.rerun()
+            else:
+                st.info(f"In the Z_score method, there are no outliers in '{outliers_col_selectbox}'")
 
-        else:
-            st.info(
-                f"In the '{method_selectbox}' method, there are no outliers in '{outliers_col_selectbox}'"
-            )
     with st.expander("Data manipulation"):
         select_manipulation_mode = st.selectbox(
             "select manipulation mode",
@@ -454,9 +462,44 @@ if 'df' in st.session_state:
                     except Exception as E:
                         st.error(f"{E}")
         elif select_manipulation_mode == "change name columns":
-            pass
+            select_col = st.selectbox(
+                "select col to change name",
+                options=EDA.list_columns(data=df), key="col0x21"
+            )
+            new_name = st.text_input(
+                "enter column new name", key="col0x22"
+            )
+            if st.button("change name column"):
+                df = data_manipulation.change_col_name(
+                    data=df, col_name_last=select_col, col_name_new=new_name
+                )
+                st.success(f"column '{select_col}' change to '{new_name}'", icon="✅")
+                st.session_state['df'] = df
+                st.rerun()
         elif select_manipulation_mode == "change data type":
-            pass
+            select_col = st.selectbox(
+                "select column",
+                options=EDA.list_columns(data=df), key="select_col_0x34"
+            )
+            select_dtype = st.selectbox(
+                "select dtype",
+                options=['int', 'float', 'bool', 'str',
+                         'object', 'category', 'datetime64[ns]', 'timedelta64[ns]'],
+                key="select_dtype"
+            )
+            if st.button("change dtype"):
+                try:
+                    df = data_manipulation.change_dtype(
+                        data=df, col=select_col, dtype=select_dtype
+                    )
+                    st.success(
+                        f"column '{select_col}' changed to dtype '{select_dtype}'"
+                    )
+                    st.session_state['df'] = df
+                    st.rerun()
+                except Exception as E:
+                    st.error(f"{E}")
+
     with st.expander("Visualization"):
         numeric = EDA.detect_numeric_type(data=df)
         category = EDA.detect_object_type(data=df)
@@ -1111,14 +1154,11 @@ if 'df' in st.session_state:
                 report_html = Auto_EDA(df)
                 components.html(report_html, height=600, scrolling=True)
     if st.button("save data"):
-        pass
-
-
-
-
-
-
-
+        success, message = save_data(data=st.session_state['df'])
+        if success:
+            st.success(f"Data saved successfully at: '{message}'")
+        else:
+            st.error(f"Failed to save data: '{message}'")
 
 
 
