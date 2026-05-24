@@ -284,3 +284,24 @@ class data_manipulation:
         if missing_cols:
             raise ValueError(f"Columns not found: {', '.join(missing_cols)}")
         return data.drop(columns=list_col)
+
+    @classmethod
+    def change_col_name(
+            cls, data: pd.DataFrame, col_name_last: str | object,
+            col_name_new: str | object
+    ) -> pd.DataFrame:
+        return data.rename(columns={col_name_last: col_name_new}, errors="raise")
+
+    @classmethod
+    def change_dtype(
+            cls, data: pd.DataFrame, col: str | object, dtype: str | object | np.dtype
+    ) -> pd.DataFrame:
+        if col in data.columns:
+            try:
+                data_copy = data.copy()
+                data_copy[col] = data[col].astype(dtype=dtype)
+                return data_copy
+            except Exception as e:
+                raise ValueError(f"Error while converting column ‘{col}’ to ‘{dtype}’: {e}")
+        else:
+            raise ValueError(f"column {col} not in data")
