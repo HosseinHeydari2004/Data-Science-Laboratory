@@ -1,8 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from Untils.Until import save_data
+
 from Core.preprocessor import handle_MissingValue, EDA, handle_outliers, data_manipulation
 from Untils.Until import Auto_EDA
+from Untils.Until import save_data
 from components.charts import seaborn_chart, plotly_charts
 
 st.title("📊 Exploratory Data Analysis (EDA)")
@@ -985,26 +986,26 @@ if 'df' in st.session_state:
             with st.expander("scatter plot"):
                 select_x = st.selectbox(
                     "please select x",
-                    options=numeric + category,
+                    options=numeric + category + Time_dtype,
                     index=0, key="select_columns_plotly_1"
                 )
                 select_y = st.selectbox(
                     "please select y",
-                    options=numeric + category,
+                    options=numeric + category + Time_dtype,
                     index=0, key="select_columns_plotly_2"
                 )
                 select_color = st.selectbox(
                     "please select color",
-                    options=[None] + numeric + category,
+                    options=[None] + numeric + category + Time_dtype,
                     index=0, key="select_color_plotly"
                 )
                 select_size = st.selectbox(
                     "please select size",
-                    options=[None] + numeric + category, index=0, key="select_size_plotly"
+                    options=[None] + numeric + category + Time_dtype, index=0, key="select_size_plotly"
                 )
                 select_symbol = st.selectbox(
                     "please select symbol",
-                    options=[None] + numeric + category,
+                    options=[None] + numeric + category + Time_dtype,
                     index=0, key="select_symbol_plotly"
                 )
                 select_size_symbol = st.slider(
@@ -1013,7 +1014,7 @@ if 'df' in st.session_state:
                 )
                 select_hover_data = st.multiselect(
                     "please select hover data",
-                    options=[None] + numeric + category,
+                    options=[None] + numeric + category + Time_dtype,
                     key="select_hover_data_plotly"
                 )
                 select_log_x = st.selectbox(
@@ -1067,17 +1068,17 @@ if 'df' in st.session_state:
             with st.expander("histogram"):
                 select_x = st.selectbox(
                     "please select x",
-                    options=numeric + category,
+                    options=numeric + category + Time_dtype,
                     index=0, key="select_x_plotly_hi"
                 )
                 select_y = st.selectbox(
                     "please select y",
-                    options=[None] + numeric + category,
+                    options=[None] + numeric + category + Time_dtype,
                     index=0, key="select_y_plotly_hi"
                 )
                 select_color = st.selectbox(
                     "please select color",
-                    options=[None] + numeric + category,
+                    options=[None] + numeric + category + Time_dtype,
                     index=0, key="select_color_plotly_hi"
                 )
                 select_log_x = st.selectbox(
@@ -1132,11 +1133,67 @@ if 'df' in st.session_state:
                         template=select_template, bargap=select_bargap
                     )
                 )
-
-            with st.expander("kde plot"):
-                pass
             with st.expander("box plot"):
-                pass
+                select_x = st.selectbox(
+                    "please select x",
+                    options=[None]+numeric + category + Time_dtype,
+                    index=0, key="select_x_plotly_box"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + numeric + category + Time_dtype,
+                    index=0, key="select_y_plotly_box"
+                )
+                select_color = st.selectbox(
+                    "please select color",
+                    options=[None] + numeric + category + Time_dtype,
+                    index=0, key="select_color_plotly_box"
+                )
+                select_log_x = st.selectbox(
+                    "please select log x",
+                    options=[False, True], index=0, key="select_log_x_plotly_box"
+                )
+                select_log_y = st.selectbox(
+                    "please select log y",
+                    options=[False, True], index=0, key="select_log_y_plotly_box"
+                )
+                select_template = st.selectbox(
+                    "please select template",
+                    options=[
+                        "plotly", "plotly_white", "plotly_dark",
+                        "ggplot2", "seaborn", "simple_white",
+                        "presentation", "none"
+                    ],
+                    index=0, key="select_template_plotly_box"
+                )
+                select_width = st.number_input("please enter width figure:", value=900, key="select_width12")
+                select_height = st.number_input("please enter height figure:", value=500, key="select_height12")
+                select_main_title = st.text_input("please enter main title:", key="select_main_title12")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel12")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel12")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize12")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize12")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize12")
+                select_tickfont_x = st.number_input(
+                    "please enter x axis size:", value=13, key="select_tickfont_x_3")
+                select_tickfont_y = st.number_input(
+                    "please enter y axis size:", value=13, key="select_tickfont_y_3")
+                if st.button("plot"):
+                    st.plotly_chart(
+                        plotly_charts.boxplot(
+                            data=df, x=select_x, y=select_y,
+                            color=select_color, log_x=select_log_x,
+                            log_y=select_log_y, template=select_template,
+                            figsize=(select_width, select_height),
+                            main_title=select_main_title, xlabel=select_xlabel, ylabel=select_ylabel,
+                            main_title_fontsize=select_main_title_fontsize,
+                            xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                            tickfont_x=select_tickfont_x, tickfont_y=select_tickfont_y,
+                        )
+                    )
             with st.expander("violin plot"):
                 pass
             with st.expander("line plot"):
