@@ -305,3 +305,5 @@ class data_manipulation:
                 raise ValueError(f"Error while converting column ‘{col}’ to ‘{dtype}’: {e}")
         else:
             raise ValueError(f"column {col} not in data")
+
+
