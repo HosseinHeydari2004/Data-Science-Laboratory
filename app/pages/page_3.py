@@ -1,5 +1,7 @@
 import streamlit as st
 
+from Core.model_trainer import ModelParameterFactory
+
 st.markdown(
     """
     # 🔧 Machine Learning Modeling
@@ -27,14 +29,14 @@ All tasks are organized as **accordions/expanders** to keep the interface clean 
     *   Allows you to export the trained model as a joblib file (`.joblib`) for deployment or future use.
 *   **Compare Results**
     *   Provides a summary table to compare performance metrics across different runs or models.
-    
-    ----
-    
-    
+
+---
+
+
     """
 )
 
-st.text("Model Configuration", text_alignment="center", width=700)
+st.text("Model Configuration", text_alignment="center", width=1000)
 
 MODELS = {
     "supervised": {
@@ -45,7 +47,8 @@ MODELS = {
         ],
         "regression": [
             "Linear Regression", "Ridge Regression", "Random Forest Regressor",
-            "XGBoost", "Lasso Regression", "ElasticNet", "Knn Regressor",
+            "Lasso Regression", "ElasticNet", "Gradient Boosting Regressor",
+            "Knn Regressor",
             "Decision Tree Regressor", "SVR(support vector Regressor)",
             "ExtraTree Regressor", "AdaBoost Regressor", "XGBBoost Regressor",
             "Neural Network(Regressor)", "LightGBM Regressor",
@@ -109,10 +112,10 @@ if select_learning_type:
         )
 
         if select_impute:
-            st.warning(
+            st.info(
                 "Whenever possible, it is recommended to remove missing values, "
                 "as imputation methods may not always accurately recover the information lost due to missing data.",
-                icon="⚠️"
+                icon="ℹ️"
             )
             select_num_impute_strategy = st.selectbox(
                 "Numeric Imputation Strategy",
@@ -148,4 +151,13 @@ if select_learning_type:
             "enable stratify",
             value=False, key="select_stratify"
         )
-
+        st.markdown(
+            """
+            ---
+    
+            """
+        )
+        st.text("Model Parameter", text_alignment="center", width=1000)
+        model_params = ModelParameterFactory.get_params(
+            select_model_type
+        )
