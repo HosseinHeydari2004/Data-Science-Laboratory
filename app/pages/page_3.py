@@ -41,7 +41,7 @@ MODELS = {
         "classification": [
             "Logistic Regression", "Random Forest", "Support Vector Machine",
             "Knn", "Gaussian Naive Bayes", "Decision Tree", "Neural Network",
-            "AdaBoost", "XGBBoost", "LightGBM", "Extra Tree", "CatBoost"
+            "AdaBoost", "XGBBoost", "LightGBM", "Extra Tree"
         ],
         "regression": [
             "Linear Regression", "Ridge Regression", "Random Forest Regressor",
@@ -90,6 +90,11 @@ if select_learning_type:
             "select Scaler Type",
             options=SCALER, index=0, key="select_Scaler_type"
         )
+        st.info(
+            "Standard Scaling is generally recommended for most machine learning algorithms, "
+            "while Min-Max Scaling is often preferred for neural networks.",
+            icon="ℹ️"
+        )
         select_feature_encoder = st.selectbox(
             "select Feature Encoder Type",
             options=[None] + FEATURE_ENCODER, index=0, key="select_feature_encoder"
@@ -98,16 +103,49 @@ if select_learning_type:
             "Select target encoder",
             options=TARGET_ENCODER, key="select_target_encoder"
         )
-        select_impute = st.selectbox(
-            "Imputing",
-            options=[False, True], index=0, key="select_impute"
+        select_impute = st.checkbox(
+            "Enable Imputation",
+            value=False
         )
+
         if select_impute:
+            st.warning(
+                "Whenever possible, it is recommended to remove missing values, "
+                "as imputation methods may not always accurately recover the information lost due to missing data.",
+                icon="⚠️"
+            )
             select_num_impute_strategy = st.selectbox(
-                "select num impute strategy",
-                options=[
-                    ""
-                ]
+                "Numeric Imputation Strategy",
+                [None, "mean", "median", "most_frequent", "constant"],
+                key="num_impute"
             )
 
+            select_cat_impute_strategy = st.selectbox(
+                "Categorical Imputation Strategy",
+                [None, "most_frequent", "constant"],
+                key="cat_impute"
+            )
+            num_fill_value = None
+            cat_fill_value = None
+
+            if select_num_impute_strategy == "constant":
+                num_fill_value = st.number_input(
+                    "Numeric Fill Value",
+                    value=0
+                )
+
+            if select_cat_impute_strategy == "constant":
+                cat_fill_value = st.text_input(
+                    "Categorical Fill Value",
+                    value="Unknown"
+                )
+        select_test_size = st.slider(
+            "select test size(%)",
+            min_value=20, max_value=50, value=30, key="select_test_size",
+            step=1
+        )
+        select_stratify = st.checkbox(
+            "enable stratify",
+            value=False, key="select_stratify"
+        )
 
