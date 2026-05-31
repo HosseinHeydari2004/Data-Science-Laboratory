@@ -1,6 +1,9 @@
 from category_encoders import TargetEncoder
+from numpy.typing import NDArray
+from pandas import Series, DataFrame
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
     StandardScaler,
@@ -63,14 +66,17 @@ class DataPreprocessor:
         numeric_steps = []
 
         if impute:
-            numeric_steps.append(
-                (
-                    "imputer",
-                    SimpleImputer(
-                        strategy=num_impute_strategy
+            if num_impute_strategy is not None:
+                numeric_steps.append(
+                    (
+                        "imputer",
+                        SimpleImputer(
+                            strategy=num_impute_strategy
+                        )
                     )
                 )
-            )
+            else:
+                numeric_steps = []
 
         numeric_steps.append(
             ("scaler", scaler)
@@ -119,14 +125,17 @@ class DataPreprocessor:
         categorical_steps = []
 
         if impute:
-            categorical_steps.append(
-                (
-                    "imputer",
-                    SimpleImputer(
-                        strategy=cat_impute_strategy
+            if cat_impute_strategy is not None:
+                categorical_steps.append(
+                    (
+                        "imputer",
+                        SimpleImputer(
+                            strategy=cat_impute_strategy
+                        )
                     )
                 )
-            )
+            else:
+                categorical_steps = []
 
         categorical_steps.append(
             ("encoder", encoder_feature)
@@ -159,3 +168,32 @@ class DataPreprocessor:
         )
 
         return prep
+
+    @classmethod
+    def set_setting_split(
+            cls,
+            data: DataFrame,
+            feature_cols: list[str],
+            target_col: str,
+            test_size: float = 0.2,
+            stratify: bool = False,
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+        x = data[feature_cols].values
+        y = data[target_col]
+        if stratify:
+            x_train, x_test, y_train, y_test = train_test_split(
+                x,
+                y,
+                test_size=test_size,
+                random_state=42,
+                stratify=y
+            )
+        else:
+            x_train, x_test, y_train, y_test = train_test_split(
+                x,
+                y,
+                test_size=test_size,
+                random_state=42
+            )
+
+        return x_train, x_test, y_train, y_test
