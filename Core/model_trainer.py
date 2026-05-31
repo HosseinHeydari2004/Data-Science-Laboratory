@@ -1,85 +1,98 @@
-from lightgbm import LGBMRegressor
-from sklearn.linear_model import ElasticNet
+from lightgbm import LGBMRegressor, LGBMClassifier
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import (
     RandomForestRegressor,
-    GradientBoostingRegressor
+    GradientBoostingRegressor,
+    AdaBoostRegressor,
+    ExtraTreesRegressor
 )
-from sklearn.neural_network import MLPRegressor
-from sklearn.ensemble import AdaBoostRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.svm import SVR
 from sklearn.linear_model import (
     LinearRegression,
     Ridge,
-    Lasso
+    Lasso,
+    ElasticNet
 )
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
+from xgboost import XGBClassifier
 from xgboost import XGBRegressor
 
 
 class ModelPipelineBuilder:
-    def __init__(self, preprocessor):
-        self.preprocessor = preprocessor
-    @staticmethod
+    MODEL_FACTORY = {
+        "Linear Regression": LinearRegression,
+        "Ridge Regression": Ridge,
+        "Lasso Regression": Lasso,
+        "ElasticNet": ElasticNet,
+        "Random Forest Regressor": RandomForestRegressor,
+        "Gradient Boosting Regressor": GradientBoostingRegressor,
+        "XGBoost Regressor": XGBRegressor,
+        "LightGBM Regressor": LGBMRegressor,
+        "Knn Regressor": KNeighborsRegressor,
+        "Decision Tree Regressor": DecisionTreeRegressor,
+        "SVR(support vector Regressor)": SVR,
+        "ExtraTree Regressor": ExtraTreesRegressor,
+        "AdaBoost Regressor": AdaBoostRegressor,
+        "Neural Network(Regressor)": MLPRegressor,
+        "Logistic Regression": LogisticRegression,
+        "Random Forest": RandomForestClassifier,
+        "Support Vector Machine": SVC,
+        "Knn": KNeighborsClassifier,
+        "Gaussian Naive Bayes": GaussianNB,
+        "Decision Tree": DecisionTreeClassifier,
+        "Neural Network": MLPClassifier,
+        "AdaBoost": AdaBoostClassifier,
+        "XGBBoost": XGBClassifier,
+        "LightGBM": LGBMClassifier,
+        "Extra Tree": ExtraTreesClassifier
+    }
+
+    def __init__(self, preprocessor: ColumnTransformer):
+        self.preprocessor: ColumnTransformer = preprocessor
+
+    @classmethod
     def get_model(
+            cls,
             model_type: str,
             model_params: dict | None = None
     ):
 
         if model_params is None:
             model_params = {}
-        if model_type == "Linear Regression":
-            model = LinearRegression(**model_params)
-        elif model_type == "Random Forest":
-            model = RandomForestRegressor(**model_params)
-        elif model_type == "XGBoost":
-            model = XGBRegressor(**model_params)
-        elif model_type == "GradientBoostingRegressor":
-            model = GradientBoostingRegressor(**model_params)
-        elif model_type == "Ridge":
-            model = Ridge(**model_params)
-        elif model_type == "Lasso":
-            model = Lasso(**model_params)
-        elif model_type == "KNeighborsRegressor":
-            model = KNeighborsRegressor(**model_params)
-        elif model_type == "DecisionTreeRegressor":
-            model = DecisionTreeRegressor(**model_params)
-        elif model_type == "XGBRegressor":
-            model = XGBRegressor(**model_params)
-        elif model_type == "LGBMRegressor":
-            model = LGBMRegressor(**model_params)
-        elif model_type == "ElasticNet":
-            model = ElasticNet(**model_params)
-        elif model_type == "SVR(support vector Regressor)":
-            model = SVR(**model_params)
-        elif model_type == "ExtraTree Regressor":
-            model = ExtraTreesRegressor(**model_params)
-        elif model_type == "AdaBoost Regressor":
-            model = AdaBoostRegressor(**model_params)
-        elif model_type == "Neural Network(Regressor)":
-            model = MLPRegressor(**model_params)
-        else:
-            raise ValueError("Invalid model type")
 
-        return model
+        model_class = cls.MODEL_FACTORY.get(model_type)
+
+        if model_class is None:
+            raise ValueError(
+                f"Unsupported model type: {model_type}"
+            )
+
+        return model_class(**model_params)
 
     def build_pipeline(
             self,
             model_type: str,
             model_params: dict | None = None
-    ):
+    ) -> Pipeline:
 
         model = self.get_model(
             model_type=model_type,
             model_params=model_params
         )
 
-        pipeline = Pipeline([
+        return Pipeline([
             ("prep", self.preprocessor),
             ("model", model)
         ])
-
-        return pipeline
-
