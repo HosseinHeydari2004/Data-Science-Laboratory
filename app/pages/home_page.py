@@ -41,8 +41,8 @@ uploaded_file = st.file_uploader(
     help="upload your data up 5MB",
 )
 
+
 def read_csv_robust(file):
-    # اگر جداکننده نامعلوم باشد، بعضی فایل‌ها با ; هستند
     encodings = ["utf-8", "utf-8-sig", "cp1256", "cp1252", "latin1"]
     seps = [",", ";", "\t", "|"]
 
@@ -65,7 +65,7 @@ if uploaded_file is not None:
             df = read_csv_robust(uploaded_file)
         else:
             uploaded_file.seek(0)
-            df = pd.read_excel(uploaded_file)  # معمولاً encoding مسئله نیست
+            df = pd.read_excel(uploaded_file)
 
         st.session_state["df"] = df
         st.success(f"File '{uploaded_file.name}' loaded successfully!")
