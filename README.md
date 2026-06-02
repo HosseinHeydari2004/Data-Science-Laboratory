@@ -1,69 +1,98 @@
-# 🧪 Data Science Laboratory
+# Data Science Laboratory
 
-**Data Science Laboratory** is an interactive environment designed for experimenting, analyzing, and deploying data
-science and machine learning workflows through an intuitive web interface built with Streamlit.
+**Data Science Laboratory** is an interactive platform for experimenting with data analysis, machine learning, and model interpretability workflows through a user-friendly web interface built with **Streamlit**.
 
-This project aims to provide a practical laboratory for exploring data analysis, visualization, model development, and
-interpretability techniques in a structured and reproducible way.
+The purpose of this project is to provide a unified environment where users can move through the core stages of a real-world data science workflow — from **data exploration and preprocessing** to **model training, evaluation, comparison, and interpretability** — all in one place.
 
-<p>
-    <img src="picture/p1.png">
+<p align="center">
+  <img src="picture/p1.png" alt="Data Science Laboratory Preview" width="850">
 </p>
 
-> ⚠️ **Project Status:**\
-> This project is currently in the **early stages of development** and
-> is actively evolving.
+> ⚠️ **Project Status**  
+> This project is currently under active development and is continuously evolving with new features and improvements.
 
-------------------------------------------------------------------------
+---
 
 ## 🚀 Project Overview
 
-The goal of this repository is to create a unified platform where users can:
+`Data Science Laboratory` is designed as a practical experimentation environment for data science and machine learning tasks.  
+It aims to simulate a simplified but realistic **ML workflow laboratory**, allowing users to interactively work with datasets, build models, evaluate results, and explore interpretability techniques.
 
-- Perform Exploratory Data Analysis (EDA)
-- Visualize datasets interactively
-- Train and evaluate Machine Learning models
-- Analyze feature importance & model interpretability
-- Experiment with real-world datasets
-- Deploy data science workflows via a web interface
+The application is especially useful for:
 
-All functionalities are accessible through a **Streamlit-based interactive dashboard**.
+- Learning and practicing data science workflows
+- Rapid experimentation with machine learning models
+- Comparing model performance in an interactive environment
+- Understanding preprocessing and pipeline design
+- Exploring explainability tools such as SHAP
 
-------------------------------------------------------------------------
+All core functionalities are accessible through a **Streamlit-based dashboard**.
+
+---
+
+## ✨ Current Features
+
+The project currently includes the following capabilities:
+
+- ✅ **Exploratory Data Analysis (EDA)**
+- ✅ **Interactive data visualization**
+- ✅ **Data preprocessing tools**
+  - Encoding
+  - Scaling
+  - Imputation
+- ✅ **Machine learning model training**
+- ✅ **Support for both classification and regression tasks**
+- ✅ **Model evaluation**
+- ✅ **Machine learning pipeline creation**
+- ✅ **Hyperparameter configuration through the UI**
+- ✅ **Model performance comparison**
+- ✅ **Model interpretability using SHAP**
+- ✅ **Interactive web interface with Streamlit**
+
+---
+
+## 🧩 Planned Features
+
+The following features are planned for future development:
+
+- 🚧 **Feature Selection**
+- 🚧 **Advanced Hyperparameter Tuning**
+- 🚧 **Experiment Tracking with Weights & Biases (W&B)**
+- 🚧 **Automatic report generation**
+- 🚧 **Model serving with FastAPI**
+- 🚧 **Dockerization for easier deployment**
+- 🚧 **Deployment optimization utilities**
+- 🚧 **Extended Explainable AI modules**
+- 🚧 **Advanced model comparison dashboard**
+
+---
 
 ## 🛠️ Tech Stack
 
-- Python
-- Streamlit
-- Pandas
-- NumPy
-- Scikit-learn
-- Plotly
-- Matplotlib / Seaborn
-- SHAP (Model Interpretability)
+This project is built using the following technologies and libraries:
 
-------------------------------------------------------------------------
+- **Python**
+- **Streamlit**
+- **Pandas**
+- **NumPy**
+- **Scikit-learn**
+- **Plotly**
+- **Matplotlib**
+- **Seaborn**
+- **SHAP**
+- **Weights & Biases (W&B)** *(planned feature)*
+- **FastAPI** *(planned feature)*
+- **Docker** *(planned feature)*
 
-## 📊 Features (Planned & In Progress)
-
-✅ Interactive data visualization\
-✅ Dataset exploration tools\
-✅ Machine learning experimentation\
-🚧 Model evaluation dashboard\
-🚧 Feature importance analysis\
-🚧 Explainable AI modules\
-🚧 Model deployment utilities
-
-------------------------------------------------------------------------
+---
 
 ## ⚙️ Installation
 
 Clone the repository:
-
-``` bash
+```bash
 git clone https://github.com/HosseinHeydari2004/Data-Science-Laboratory.git
 cd Data-Science-Laboratory
-```
+
 
 Create a virtual environment (recommended):
 
@@ -109,26 +138,44 @@ The application will automatically open in your browser.
 
     Data-Science-Laboratory
     │
-    ├── components                 # Main Streamlit application
-    ├── pages/                 # Streamlit multi-pages
-    ├── datasets/              # Sample datasets
-    ├── models/                # ML models
-    ├── utils/                 # Helper functions
+    ├── components/        # Main Streamlit components
+    ├── pages/             # Streamlit multi-page modules
+    ├── datasets/          # Sample datasets
+    ├── models/            # Machine learning models
+    ├── utils/             # Helper functions and utilities
     ├── requirements.txt
     └── README.md
+
 
 ------------------------------------------------------------------------
 
 ## 🎯 Project Vision
 
-This repository is intended to evolve into a **complete Data Science experimentation platform**, bridging:
+This repository is intended to grow into a **complete data science experimentation platform** that brings together:
 
 - Data Analysis
+- Data Preprocessing
 - Machine Learning
-- Model Interpretability
+- Model Evaluation
+- Model Comparison
+- Explainable AI
 - Interactive Deployment
 
-The long-term objective is to simulate a real-world **ML laboratory environment**.
+The long-term goal is to create a practical environment that reflects parts of real-world **data science** and **machine learning workflows**, while also serving as a learning and experimentation platform.
+
+
+------------------------------------------------------------------------
+
+## 📌 Roadmap
+
+- [ ] Feature selection tools
+- [ ] Hyperparameter tuning module
+- [ ] Experiment tracking integration with W&B
+- [ ] Automated reporting
+- [ ] Model serving with FastAPI
+- [ ] Docker support
+- [ ] Extended explainability features
+- [ ] Improved model comparison dashboard
 
 ------------------------------------------------------------------------
 
@@ -143,15 +190,6 @@ If you'd like to contribute:
 3. Commit your changes
 4. Open a Pull Request
 
-------------------------------------------------------------------------
-
-## 📌 Roadmap
-
--   [ ] Advanced EDA Module
--   [ ] Automated ML Pipeline
--   [ ] Model Comparison Dashboard
--   [ ] Explainable AI Integration
--   [ ] Deployment Optimization
 
 ------------------------------------------------------------------------
 
