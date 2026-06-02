@@ -148,7 +148,7 @@ if select_learning_type:
             step=1
         )
         select_stratify = st.checkbox(
-            "enable stratify",
+            "Enable Stratify",
             value=False, key="select_stratify"
         )
         st.markdown(
