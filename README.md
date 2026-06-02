@@ -91,12 +91,13 @@ This project is built using the following technologies and libraries:
 Clone the repository:
 ```bash
 git clone https://github.com/HosseinHeydari2004/Data-Science-Laboratory.git
+
 cd Data-Science-Laboratory
 
+```
 
 Create a virtual environment (recommended):
-
-``` bash
+```bash
 python -m venv venv
 ```
 
