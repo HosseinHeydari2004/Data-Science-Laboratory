@@ -372,28 +372,276 @@ class ModelParameterFactory:
 
     @staticmethod
     def LightGBM_regressor():
-        pass
+        return {
+            "boosting_type": st.selectbox(
+                "select boosting type",
+                options=[
+                    "gbdt",
+                    "dart",
+                    "rf"
+                ], index=0,
+            ),
+            "num_leaves": st.slider(
+                "Enter num leaves",
+                min_value=10, max_value=50, value=31
+            ),
+            "max_depth": (st.slider(
+                "Enter max depth",
+                min_value=-1, value=-1, max_value=20
+            ),
+                          st.info(
+                              "When max_depth is set to -1, "
+                              "the algorithm explores the tree completely, "
+                              "down to the deepest leaf nodes.",
+                              icon="ℹ️"
+                          )
+            ),
+            "learning_rate": st.slider(
+                "Enter learning rate",
+                min_value=0.001, max_value=5.0, value=0.1, step=0.001
+            ),
+            "n_estimators": st.slider(
+                "Enter n estimators",
+                min_value=20, value=100, max_value=3000, step=5
+            ),
+            "class_weight": st.selectbox(
+                "select class weight",
+                options=[
+                    None,
+                    "balanced"
+                ], index=0
+            ),
+            "reg_alpha": st.slider(
+                "Enter reg alpha",
+                min_value=0.0, value=0.0, max_value=10.0, key="0x23dd"
+            ),
+            "reg_lambda": st.slider(
+                "Enter reg alpha",
+                min_value=0.0, value=0.0, max_value=10.0, key="0xrttv"
+            )
+        }
 
     @staticmethod
     def Decision_Tree_regressor():
-        pass
+        return {
+            "criterion": st.selectbox(
+                "select criterion",
+                options=[
+                    "squared_error",
+                    "friedman_mse",
+                    "absolute_error",
+                    "poisson"
+                ], index=0, key="0x9ow3"
+            ),
+            "splitter": st.selectbox(
+                "select splitter",
+                options=[
+                    "best",
+                    "random"
+                ], index=0, key="0xcvd2"
+            ),
+            "max_depth": st.slider(
+                "Enter max depth",
+                min_value=2, value=None, max_value=20
+            ),
+            "min_samples_split": st.slider(
+                "Enter min samples split",
+                min_value=2, value=2, max_value=50
+            ),
+            "min_samples_leaf": st.slider(
+                "Enter min samples leaf",
+                min_value=1, value=1, max_value=50
+            ),
+            "max_features": st.selectbox(
+                "select max features",
+                options=[
+                    None,
+                    "sqrt",
+                    "log2"
+                ], index=0, key="0xase1"
+            ),
+            "ccp_alpha": st.slider(
+                "Enter ccp alpha",
+                min_value=0.0, max_value=10.0, value=0.0
+            )
+
+        }
 
     @staticmethod
     def svr():
-        pass
+        return {
+            "kernel": st.selectbox(
+                "select kernel",
+                options=[
+                    "linear",
+                    "poly",
+                    "rbf",
+                    "sigmoid"
+                ], index=2, key="0x4562lp"
+            ),
+            "degree": (st.slider(
+                "Enter degree",
+                min_value=2, value=2, max_value=10, key="0xcvf4"
+            ),
+                       st.info(
+                           "The degree parameter is only applicable when the poly kernel is selected.",
+                           icon="ℹ️"
+                       )
+            ),
+            "gamma": st.selectbox(
+                "select gamma",
+                options=[
+                    "scale",
+                    "auto"
+                ], index=0, key="0x.09"
+            ),
+            "C": st.slider(
+                "Enter C",
+                min_value=1.0, value=1.0, max_value=20.0, key="0x./l"
+            ),
+            "shrinking": st.checkbox(
+                "shrinking", value=False
+            )
+        }
 
     @staticmethod
     def XGBoost_regressor():
-        pass
+        return {
+            "n_estimators": st.slider(
+                "Enter n estimators",
+                min_value=20, value=100, max_value=3000, key="0cdf"
+            ),
+            "max_depth": st.slider(
+                "Enter max depth",
+                min_value=2, value=None, max_value=20, key="02ws"
+            ),
+            "learning_rate": st.slider(
+                "Enter learning rate",
+                min_value=0.001, max_value=5.0, value=0.1, step=0.001, key="0l223"
+            ),
+            "subsample": st.slider(
+                "Enter subsample",
+                min_value=0.2, max_value=1.0, step=0.1, value=0.5, key="0w23"
+            ),
+            "gamma": st.slider(
+                "Enter gamma",
+                min_value=0.0, max_value=10.0, step=0.1, value=0.0
+            )
+        }
+
     @staticmethod
     def ExtraTree_regressor():
-        pass
+        return {
+            "n_estimators": st.slider(
+                "Enter n estimators",
+                min_value=10, value=10, max_value=1000, step=5, key="0o232"
+            ),
+            "max_features": st.selectbox(
+                "Select max features",
+                options=[
+                    "auto",
+                    "sqrt",
+                    "log2",
+                    None
+                ], index=0, key="0t422"
+            ),
+            "max_depth": st.slider(
+                "Enter max depth",
+                min_value=2, value=None, max_value=20, key="02ws"
+            ),
+            "min_samples_split": st.slider(
+                "Enter min samples split",
+                min_value=2, value=2, max_value=50
+            ),
+            "bootstrap": st.checkbox(
+                "bootstrap",
+                value=False, key="0uw2"
+            ),
+            "oob_score": st.checkbox(
+                "oob score",
+                value=False, key="0p92"
+            ),
+            "n_jobs": st.checkbox(
+                "n jobs", value=-1, key="0ore"
+            )
+        }
+
     @staticmethod
     def AdaBoost_regressor():
-        pass
+        return {
+            "n_estimators": st.slider(
+                "Enter n estimators",
+                min_value=10, value=50, max_value=1000, step=5, key="0o232"
+            ),
+            "learning_rate": st.slider(
+                "Enter learning rate",
+                min_value=0.001, max_value=5.0, value=0.1, step=0.001, key="0l223"
+            ),
+            "loss": st.selectbox(
+                "Select loss Function",
+                options=[
+                    "linear",
+                    "square",
+                    "exponential"
+                ], index=0, key="0k232"
+            ),
+        }
+
     @staticmethod
     def Neural_Network_regressor():
-        pass
+        return {
+            "loss":st.selectbox(
+                "Select loss",
+                options=[
+                    "squared_error",
+                    "poisson"
+                ], index=0, key="0u29"
+            ),
+            "hidden_layer_sizes":st.slider(
+                "Enter hidden layer sizes",
+                min_value=5, value=100, max_value=500, key="0u322s"
+            ),
+            "activation":st.selectbox(
+                "Select activation",
+                options=[
+                    "identity",
+                    "logistic",
+                    "tanh",
+                    "relu"
+                ]
+            ),
+            "solver":st.selectbox(
+                "Select solver",
+                options=[
+                    "lbfgs",
+                    "sgd",
+                    "adam"
+                ], index=2, key="0urw"
+            ),
+            "alpha":st.slider(
+                "Enter alpha",
+                min_value=0.0001, max_value=10.0, value=0.0001, key=""
+            ),
+            "learning_rate":st.selectbox(
+                "Select learning rate",
+                options=[
+                    "constant",
+                    "invscaling",
+                    "adaptive"
+                ], index=0, key="0er2"
+            ),
+            "learning_rate_init":st.slider(
+                "Enter learning rate",
+                min_value=0.001, max_value=5.0, value=0.001
+            ),
+            "max_iter":st.slider(
+                "Enter max iteration",
+                min_value=10, max_value=2000, value=200, key="li92"
+            ),
+            "early_stopping":st.checkbox(
+                "early stopping", value=False, key="0po2"
+            )
+        }
 
     PARAMS_FACTORY = {
         "Logistic Regression": logistic_regression,
@@ -403,17 +651,14 @@ class ModelParameterFactory:
         "ElasticNet": elasticnet,
         "Random Forest Regressor": random_forest_regressor,
         "Gradient Boosting Regressor": gradient_boosting_regressor,
-        "XGBoost Regressor": XGBoost_regressor,
+        "XGBBoost Regressor": XGBoost_regressor,
         "Knn Regressor": knn_regressor,
         "LightGBM Regressor": LightGBM_regressor,
         "Decision Tree Regressor": Decision_Tree_regressor,
         "SVR(support vector Regressor)": svr,
-        "ExtraTree Regressor":ExtraTree_regressor,
-        "AdaBoost Regressor":AdaBoost_regressor,
-        "Neural Network(Regressor)":Neural_Network_regressor
-
-
-
+        "ExtraTree Regressor": ExtraTree_regressor,
+        "AdaBoost Regressor": AdaBoost_regressor,
+        "Neural Network(Regressor)": Neural_Network_regressor
 
     }
 
