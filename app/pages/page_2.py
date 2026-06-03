@@ -1200,16 +1200,6 @@ if 'df' in st.session_state:
                 pass
             with st.expander("heatmap"):
                 pass
-
-    with st.expander("Auto EDA"):
-        select_Auto_EDA_mode = st.selectbox(
-            "are you create Auto EDA",
-            options=[False, True], index=0, key="select_Auto_EDA_mode"
-        )
-        if select_Auto_EDA_mode:
-            with st.spinner("Analyzing the data…"):
-                report_html = Auto_EDA(df)
-                components.html(report_html, height=600, scrolling=True)
     if st.button("save data"):
         success, message = save_data(data=st.session_state['df'])
         if success:
