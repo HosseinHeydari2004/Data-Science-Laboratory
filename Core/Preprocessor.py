@@ -1,5 +1,4 @@
 from category_encoders import TargetEncoder
-from numpy.typing import NDArray
 from pandas import Series, DataFrame
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -177,8 +176,9 @@ class DataPreprocessor:
             target_col: str,
             test_size: float = 0.2,
             stratify: bool = False,
-    ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
-        x = data[feature_cols].values
+    ) -> tuple[DataFrame, DataFrame, Series, Series]:
+
+        x = data[feature_cols]
         y = data[target_col]
         if stratify:
             x_train, x_test, y_train, y_test = train_test_split(
