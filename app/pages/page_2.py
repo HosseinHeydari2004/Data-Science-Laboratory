@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from Core.eda import handle_MissingValue, EDA, handle_outliers, data_manipulation
-from Untils.Until import Auto_EDA
+
 from Untils.Until import save_data
 from components.charts import seaborn_chart, plotly_charts
 
