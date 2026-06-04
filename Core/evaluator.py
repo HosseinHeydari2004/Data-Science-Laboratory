@@ -126,6 +126,9 @@ class Evaluator:
             [results]
         )
 
+    from sklearn.model_selection import cross_validate
+    import pandas as pd
+
     def cross_validation(
             self,
             data,
@@ -156,8 +159,10 @@ class Evaluator:
             raise ValueError(
                 f"Unknown task_type: {self.task_type}"
             )
+
         X = data[feature_cols]
         y = data[target_cols]
+
         scores = cross_validate(
             estimator=self.pipeline,
             X=X,
@@ -178,11 +183,14 @@ class Evaluator:
                     ""
                 ).upper()
 
+                if metric in ["MAE", "MSE"]:
+                    mean_value = abs(values.mean())
+                else:
+                    mean_value = values.mean()
+
                 results[
                     f"Train {metric}"
-                ] = abs(
-                    values.mean()
-                )
+                ] = mean_value
 
             elif metric_name.startswith("test_"):
 
@@ -191,16 +199,31 @@ class Evaluator:
                     ""
                 ).upper()
 
+                if metric in ["MAE", "MSE"]:
+                    mean_value = abs(values.mean())
+                else:
+                    mean_value = values.mean()
+
                 results[
                     f"CV {metric}"
-                ] = abs(
-                    values.mean()
-                )
-        result = pd.DataFrame(
-            [results]
-        )
-        result["total cv"] = cv
-        return result
+                ] = mean_value
+
+                # ذخیره امتیاز هر Fold
+                for fold_idx, score in enumerate(
+                        values,
+                        start=1
+                ):
+
+                    if metric in ["MAE", "MSE"]:
+                        score = abs(score)
+
+                    results[
+                        f"{metric} Fold {fold_idx}"
+                    ] = score
+
+        results["Total CV"] = cv
+
+        return pd.DataFrame([results])
 
     def full_report(
             self,
