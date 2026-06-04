@@ -278,7 +278,9 @@ if 'df' in st.session_state:
                     options=critical_missing_cols.keys(), key="select_col_to_delete"
                 )
                 if st.button("delete missing values"):
-                    df = EDA.delete_columns(data=df, col=select_col_to_delete)
+                    df = handle_MissingValue.remove_missing_values(
+                        data=df, axis=select_axis
+                    )
                     st.session_state['df'] = df
                     st.success("✅ Missing values removed successfully!")
                     st.rerun()
