@@ -1,3 +1,4 @@
+import numpy as np
 from category_encoders import TargetEncoder
 from pandas import Series, DataFrame
 from sklearn.compose import ColumnTransformer
@@ -115,7 +116,9 @@ class DataPreprocessor:
         )
 
         if encoder_feature is None:
-            raise ValueError("Invalid encoder type")
+            raise ValueError(
+                "Encoder type must be specified when categorical columns are present."
+            )
 
         # =========================
         # Categorical Pipeline
@@ -197,3 +200,89 @@ class DataPreprocessor:
             )
 
         return x_train, x_test, y_train, y_test
+
+    def get_config_df(
+            self,
+            model_name: str,
+            task_type: str,
+            target_col: str,
+            test_size: float,
+            train_size: float,
+            stratify: bool,
+            n_train: int,
+            n_test: int,
+            scaler_type,
+            impute,
+            num_impute_strategy,
+            cat_impute_strategy,
+            encoder_feature_type,
+            cross_validation: bool = False,
+            cv_folds: int | None = None
+    ) -> DataFrame:
+
+        num_val = ", ".join(self.num_cols) if self.num_cols else np.nan
+        cat_val = ", ".join(self.cat_cols) if self.cat_cols else np.nan
+
+        data = {
+            "component": [
+
+                # Dataset
+                "target_column",
+                "numeric_features",
+                "categorical_features",
+                "n_train_samples",
+                "n_test_samples",
+
+                # Split
+                "train_size",
+                "test_size",
+                "stratify_enabled",
+
+                # Task / Model
+                "task_type",
+                "model_name",
+
+                # Preprocessing
+                "scaler",
+                "imputation_enabled",
+                "numeric_imputation_strategy",
+                "categorical_imputation_strategy",
+                "encoder",
+
+                # Validation
+                "cross_validation_enabled",
+                "cv_folds"
+            ],
+
+            "value": [
+
+                # Dataset
+                target_col,
+                num_val,
+                cat_val,
+                n_train,
+                n_test,
+
+                # Split
+                f"{train_size * 100:.0f}%",
+                f"{test_size * 100:.0f}%",
+                stratify,
+
+                # Task / Model
+                task_type,
+                model_name,
+
+                # Preprocessing
+                scaler_type if self.num_cols else np.nan,
+                impute,
+                num_impute_strategy if impute and self.num_cols else np.nan,
+                cat_impute_strategy if impute and self.cat_cols else np.nan,
+                encoder_feature_type if self.cat_cols else np.nan,
+
+                # Validation
+                cross_validation,
+                cv_folds if cross_validation else np.nan
+            ]
+        }
+
+        return DataFrame(data)
