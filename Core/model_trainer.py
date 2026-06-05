@@ -55,7 +55,7 @@ class ModelPipelineBuilder:
         "Decision Tree": DecisionTreeClassifier,
         "Neural Network": MLPClassifier,
         "AdaBoost": AdaBoostClassifier,
-        "XGBBoost": XGBClassifier,
+        "XGBoost": XGBClassifier,
         "LightGBM": LGBMClassifier,
         "Extra Tree": ExtraTreesClassifier
     }
@@ -220,7 +220,7 @@ class ModelParameterFactory:
         return {
             "alpha": st.slider(
                 "enter alpha",
-                min_value=1.0, value=1.0, max_value=20
+                min_value=1.0, value=1.0, max_value=20.0
             ),
             "max_iter": st.slider(
                 "enter max iterations",
@@ -299,7 +299,7 @@ class ModelParameterFactory:
             ),
             "criterion": st.selectbox(
                 "select criterion",
-                options=["gini", "entropy", "log_loss"], index=0
+                options=["squared_error", "absolute_error", "poisson"], index=0
             ),
             "min_samples_split": st.slider(
                 "enter min samples split",
@@ -374,7 +374,7 @@ class ModelParameterFactory:
             ),
             "alpha": st.slider(
                 "Enter alpha",
-                min_value=0.9, max_value=10.0, value=0.9
+                min_value=0.1, max_value=0.9, value=0.1
             ),
             "ccp_alpha": st.slider(
                 "Enter ccp alpha",
@@ -414,24 +414,16 @@ class ModelParameterFactory:
                 "select boosting type",
                 options=[
                     "gbdt",
-                    "dart",
-                    "rf"
+                    "dart"
                 ], index=0,
             ),
             "num_leaves": st.slider(
                 "Enter num leaves",
                 min_value=10, max_value=50, value=31
             ),
-            "max_depth": (st.slider(
+            "max_depth": st.slider(
                 "Enter max depth",
-                min_value=-1, value=-1, max_value=20
-            ),
-                          st.info(
-                              "When max_depth is set to -1, "
-                              "the algorithm explores the tree completely, "
-                              "down to the deepest leaf nodes.",
-                              icon="ℹ️"
-                          )
+                min_value=2, value=2, max_value=20
             ),
             "learning_rate": st.slider(
                 "Enter learning rate",
@@ -516,14 +508,10 @@ class ModelParameterFactory:
                     "sigmoid"
                 ], index=2, key="0x4562lp"
             ),
-            "degree": (st.slider(
+            "degree": st.slider(
                 "Enter degree",
-                min_value=2, value=2, max_value=10, key="0xcvf4"
-            ),
-                       st.info(
-                           "The degree parameter is only applicable when the poly kernel is selected.",
-                           icon="ℹ️"
-                       )
+                min_value=1, value=1, max_value=10, key="0xcvf4",
+                help="The degree parameter is only applicable when the poly kernel is selected."
             ),
             "gamma": st.selectbox(
                 "select gamma",
@@ -575,12 +563,7 @@ class ModelParameterFactory:
             ),
             "max_features": st.selectbox(
                 "Select max features",
-                options=[
-                    "auto",
-                    "sqrt",
-                    "log2",
-                    None
-                ], index=0, key="0t422"
+                options=["sqrt", "log2", None], index=0, key="0t422"
             ),
             "max_depth": st.slider(
                 "Enter max depth",
@@ -872,7 +855,6 @@ class ModelParameterFactory:
             "max_features": st.selectbox(
                 "Select max features",
                 options=[
-                    "auto",
                     "sqrt",
                     "log2",
                     None
@@ -907,7 +889,7 @@ class ModelParameterFactory:
         "ElasticNet": elasticnet,
         "Random Forest Regressor": random_forest_regressor,
         "Gradient Boosting Regressor": gradient_boosting_regressor,
-        "XGBBoost Regressor": xgboost,
+        "XGBoost Regressor": xgboost,
         "Knn Regressor": knn_regressor,
         "LightGBM Regressor": lightgbm,
         "Decision Tree Regressor": Decision_Tree_regressor,
@@ -915,13 +897,14 @@ class ModelParameterFactory:
         "ExtraTree Regressor": ExtraTree_regressor,
         "AdaBoost Regressor": AdaBoost_regressor,
         "Neural Network(Regressor)": Neural_Network_regressor,
+        "Ridge Regression": ridge,
         "Knn": Knn,
         "Gaussian Naive Bayes": gaussian_naive_bayes,
         "Support Vector Machine": support_vector_machine,
         "Decision Tree": decision_tree,
         "Neural Network": neural_network,
         "AdaBoost": adaboost,
-        "XGBBoost": xgboost,
+        "XGBoost": xgboost,
         "LightGBM": lightgbm
 
     }
