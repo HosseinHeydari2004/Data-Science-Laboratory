@@ -55,7 +55,7 @@ if 'df' in st.session_state:
                 "Lasso Regression", "ElasticNet", "Gradient Boosting Regressor",
                 "Knn Regressor",
                 "Decision Tree Regressor", "SVR(support vector Regressor)",
-                "ExtraTree Regressor", "AdaBoost Regressor", "XGBBoost Regressor",
+                "ExtraTree Regressor", "AdaBoost Regressor", "XGBoost Regressor",
                 "Neural Network(Regressor)", "LightGBM Regressor",
 
             ]
@@ -77,8 +77,8 @@ if 'df' in st.session_state:
         "Target Encoder"
     ]
     TARGET_ENCODER = [
-        "Label Encoder",
-        "None"
+        "None",
+        "Label Encoder"
     ]
 
     select_learning_type = st.selectbox(
@@ -173,6 +173,38 @@ if 'df' in st.session_state:
                     max_value=10,
                     value=5
                 )
+
+            st.markdown(
+                """
+                
+                ---
+                
+                """
+            )
+            st.text("configuration summary", text_alignment="center", width=1000)
+            if st.button("Show configuration summary", use_container_width=True, icon="🔗"):
+                num_cols = EDA.detect_numeric_type(data=df)
+                cat_cols = EDA.detect_object_type(data=df)
+                pr = DataPreprocessor(num_cols=num_cols, cat_cols=cat_cols)
+                test_ratio = select_test_size / 100
+
+                st.dataframe(pr.get_config_df(
+                    model_name=select_model_type,
+                    task_type=select_task_type,
+                    target_col=select_target,
+                    test_size=test_ratio,
+                    train_size=1 - test_ratio,
+                    stratify=select_stratify,
+                    n_test=int(len(df) * test_ratio),
+                    n_train=len(df) - int(len(df) * test_ratio),
+                    cross_validation=enable_cv,
+                    cv_folds=cv_folds,
+                    scaler_type=select_Scaler_type,
+                    impute=select_impute,
+                    num_impute_strategy=select_num_impute_strategy,
+                    cat_impute_strategy=select_cat_impute_strategy,
+                    encoder_feature_type=select_feature_encoder
+                ))
             st.markdown(
                 """
                 ---
@@ -183,114 +215,118 @@ if 'df' in st.session_state:
             model_params = ModelParameterFactory.get_params(
                 select_model_type
             )
+
             train_btn = st.button(
                 "🚀 Train Model",
                 use_container_width=True
             )
-            if train_btn:
-                with st.spinner(
-                        "Training model..."
-                ):
-                    # =========================
-                    # 1. Split Data
-                    # =========================
-                    X = df.drop(columns=[select_target])
-                    y = df[select_target]
-                    num_cols = EDA.detect_numeric_type(data=df)
-                    cat_cols = EDA.detect_object_type(data=df)
+            try:
+                if train_btn:
+                    with st.spinner(
+                            "Training model..."
+                    ):
+                        # =========================
+                        # 1. Split Data
+                        # =========================
+                        X = df.drop(columns=[select_target])
+                        y = df[select_target]
+                        num_cols = EDA.detect_numeric_type(data=df)
+                        cat_cols = EDA.detect_object_type(data=df)
 
-                    X_train, X_test, y_train, y_test = DataPreprocessor.set_setting_split(
-                        data=df,
-                        feature_cols=num_cols + cat_cols,
-                        target_col=select_target,
-                        test_size=select_test_size / 100,
-                        stratify=select_stratify
-                    )
-
-                    # =========================
-                    # 2. Preprocessor
-                    # =========================
-
-                    preprocessor = DataPreprocessor(
-                        num_cols=num_cols,
-                        cat_cols=cat_cols
-                    )
-
-                    transformer = preprocessor.get_transformer(
-                        scaler_type=select_Scaler_type,
-                        impute=select_impute,
-                        num_impute_strategy=select_num_impute_strategy if select_num_impute_strategy else None,
-                        cat_impute_strategy=select_cat_impute_strategy if select_cat_impute_strategy else None,
-                        encoder_feature_type=select_feature_encoder
-                    )
-
-                    # =========================
-                    # 3. Build Pipeline
-                    # =========================
-
-                    pipeline_builder = ModelPipelineBuilder(
-                        preprocessor=transformer
-                    )
-
-                    pipeline = pipeline_builder.build_pipeline(
-                        model_type=select_model_type,
-                        model_params=model_params
-                    )
-
-                    # =========================
-                    # 4. Task Type
-                    # =========================
-
-                    task_type = ModelPipelineBuilder.MODEL_INFO[
-                        select_model_type
-                    ]
-
-                    # =========================
-                    # 5. Evaluator
-                    # =========================
-
-                    evaluator = Evaluator(
-                        pipeline=pipeline,
-                        task_type=task_type
-                    )
-
-                    # =========================
-                    # 6. Train + Evaluate
-                    # =========================
-
-                    metrics_df = evaluator.evaluate(
-                        X_train,
-                        y_train,
-                        X_test,
-                        y_test
-                    )
-                    # =========================
-                    # 7. Cross Validation (optional)
-                    # =========================
-
-                    cv_df = None
-                    if enable_cv:
-                        cv_df = evaluator.cross_validation(
-                            feature_cols=num_cols + cat_cols,
+                        X_train, X_test, y_train, y_test = DataPreprocessor.set_setting_split(
                             data=df,
-                            target_cols=select_target,
-                            cv=cv_folds
+                            feature_cols=num_cols + cat_cols,
+                            target_col=select_target,
+                            test_size=select_test_size / 100,
+                            stratify=select_stratify
                         )
 
-                    # =========================
-                    # 8. Store Model
-                    # =========================
-                    trained_model = pipeline
-                    st.success("Model trained successfully!")
-                st.text("Result", text_alignment="center", width=1010)
-                st.markdown(
-                    """
-                    ---
-                    
-                    """
-                )
-                st.dataframe(metrics_df)
-                st.dataframe(cv_df)
+                        # =========================
+                        # 2. Preprocessor
+                        # =========================
+
+                        preprocessor = DataPreprocessor(
+                            num_cols=num_cols,
+                            cat_cols=cat_cols
+                        )
+
+                        transformer = preprocessor.get_transformer(
+                            scaler_type=select_Scaler_type,
+                            impute=select_impute,
+                            num_impute_strategy=select_num_impute_strategy if select_num_impute_strategy else None,
+                            cat_impute_strategy=select_cat_impute_strategy if select_cat_impute_strategy else None,
+                            encoder_feature_type=select_feature_encoder
+                        )
+
+                        # =========================
+                        # 3. Build Pipeline
+                        # =========================
+
+                        pipeline_builder = ModelPipelineBuilder(
+                            preprocessor=transformer
+                        )
+
+                        pipeline = pipeline_builder.build_pipeline(
+                            model_type=select_model_type,
+                            model_params=model_params
+                        )
+
+                        # =========================
+                        # 4. Task Type
+                        # =========================
+
+                        task_type = ModelPipelineBuilder.MODEL_INFO[
+                            select_model_type
+                        ]
+
+                        # =========================
+                        # 5. Evaluator
+                        # =========================
+
+                        evaluator = Evaluator(
+                            pipeline=pipeline,
+                            task_type=task_type
+                        )
+
+                        # =========================
+                        # 6. Train + Evaluate
+                        # =========================
+
+                        metrics_df = evaluator.evaluate(
+                            X_train,
+                            y_train,
+                            X_test,
+                            y_test
+                        )
+                        # =========================
+                        # 7. Cross Validation (optional)
+                        # =========================
+
+                        cv_df = None
+                        if enable_cv:
+                            cv_df = evaluator.cross_validation(
+                                feature_cols=num_cols + cat_cols,
+                                data=df,
+                                target_cols=select_target,
+                                cv=cv_folds
+                            )
+
+                        # =========================
+                        # 8. Store Model
+                        # =========================
+                        trained_model = pipeline
+                        st.success("Model trained successfully!")
+                    st.text("Result", text_alignment="center", width=1010)
+                    st.markdown(
+                        """
+                        ---
+                        
+                        """
+                    )
+                    st.dataframe(metrics_df)
+                    st.dataframe(cv_df)
+            except Exception as ex:
+                st.error(f"{ex}")
 
 
 
