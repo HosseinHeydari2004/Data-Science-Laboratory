@@ -7,7 +7,8 @@ from sklearn.metrics import (
     f1_score,
     r2_score,
     mean_absolute_error,
-    mean_squared_error
+    mean_squared_error,
+    roc_auc_score
 )
 
 from sklearn.model_selection import cross_validate
@@ -15,20 +16,14 @@ from sklearn.model_selection import cross_validate
 
 class Evaluator:
 
-    def __init__(
-            self,
-            pipeline,
-            task_type: str
-    ):
+    def __init__(self, pipeline, task_type: str):
 
         self.pipeline = pipeline
         self.task_type = task_type.lower()
 
-    def fit(
-            self,
-            X_train,
-            y_train
-    ):
+    def fit(self, X_train, y_train):
+
+        y_train = pd.Series(y_train).squeeze()
 
         self.pipeline.fit(
             X_train,
@@ -37,10 +32,7 @@ class Evaluator:
 
         return self
 
-    def predict(
-            self,
-            X
-    ):
+    def predict(self, X):
 
         return self.pipeline.predict(X)
 
@@ -52,6 +44,9 @@ class Evaluator:
             y_test
     ) -> pd.DataFrame:
 
+        y_train = pd.Series(y_train).squeeze()
+        y_test = pd.Series(y_test).squeeze()
+
         self.fit(
             X_train,
             y_train
@@ -60,6 +55,7 @@ class Evaluator:
         y_pred = self.predict(
             X_test
         )
+        y_probs = self.pipeline.predict_proba(X_test)[:, 1]
 
         if self.task_type == "regression":
 
@@ -113,6 +109,9 @@ class Evaluator:
                     y_pred,
                     average="weighted",
                     zero_division=0
+                ),
+                "AUC Score": roc_auc_score(
+                    y_test, y_probs
                 )
             }
 
@@ -122,20 +121,16 @@ class Evaluator:
                 f"Unknown task_type: {self.task_type}"
             )
 
-        return pd.DataFrame(
-            [results]
-        )
-
-    from sklearn.model_selection import cross_validate
-    import pandas as pd
+        return pd.DataFrame([results])
 
     def cross_validation(
             self,
-            data,
-            feature_cols,
-            target_cols,
+            X,
+            y,
             cv: int = 5
     ) -> pd.DataFrame:
+
+        y = pd.Series(y).squeeze()
 
         if self.task_type == "regression":
 
@@ -151,7 +146,8 @@ class Evaluator:
                 "accuracy": "accuracy",
                 "precision": "precision_weighted",
                 "recall": "recall_weighted",
-                "f1": "f1_weighted"
+                "f1": "f1_weighted",
+
             }
 
         else:
@@ -160,16 +156,14 @@ class Evaluator:
                 f"Unknown task_type: {self.task_type}"
             )
 
-        X = data[feature_cols]
-        y = data[target_cols]
-
         scores = cross_validate(
             estimator=self.pipeline,
             X=X,
             y=y,
             cv=cv,
             scoring=scoring,
-            return_train_score=True
+            return_train_score=True,
+            error_score="raise"
         )
 
         results = {}
@@ -208,7 +202,6 @@ class Evaluator:
                     f"CV {metric}"
                 ] = mean_value
 
-                # ذخیره امتیاز هر Fold
                 for fold_idx, score in enumerate(
                         values,
                         start=1
