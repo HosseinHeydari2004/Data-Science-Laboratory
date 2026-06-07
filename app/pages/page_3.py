@@ -1,9 +1,11 @@
 import streamlit as st
+from sklearn.preprocessing import LabelEncoder
 
 from Core.Preprocessor import DataPreprocessor
 from Core.eda import EDA
 from Core.evaluator import Evaluator
 from Core.model_trainer import ModelParameterFactory, ModelPipelineBuilder
+from components.metrics_plots import MetricPlot
 
 st.markdown(
     """
@@ -48,7 +50,7 @@ if 'df' in st.session_state:
             "classification": [
                 "Logistic Regression", "Random Forest", "Support Vector Machine",
                 "Knn", "Gaussian Naive Bayes", "Decision Tree", "Neural Network",
-                "AdaBoost", "XGBBoost", "LightGBM", "Extra Tree"
+                "AdaBoost", "XGBoost", "LightGBM", "Extra Tree"
             ],
             "regression": [
                 "Linear Regression", "Ridge Regression", "Random Forest Regressor",
@@ -74,7 +76,6 @@ if 'df' in st.session_state:
     FEATURE_ENCODER = [
         "Ordinal Encoder",
         "One Hot Encoder",
-        "Target Encoder"
     ]
     TARGET_ENCODER = [
         "None",
@@ -189,6 +190,7 @@ if 'df' in st.session_state:
                 test_ratio = select_test_size / 100
 
                 st.dataframe(pr.get_config_df(
+                    data=df,
                     model_name=select_model_type,
                     task_type=select_task_type,
                     target_col=select_target,
@@ -220,115 +222,143 @@ if 'df' in st.session_state:
                 "🚀 Train Model",
                 use_container_width=True
             )
-            try:
-                if train_btn:
-                    with st.spinner(
-                            "Training model..."
-                    ):
-                        # =========================
-                        # 1. Split Data
-                        # =========================
-                        X = df.drop(columns=[select_target])
-                        y = df[select_target]
-                        num_cols = EDA.detect_numeric_type(data=df)
-                        cat_cols = EDA.detect_object_type(data=df)
 
-                        X_train, X_test, y_train, y_test = DataPreprocessor.set_setting_split(
-                            data=df,
-                            feature_cols=num_cols + cat_cols,
-                            target_col=select_target,
-                            test_size=select_test_size / 100,
-                            stratify=select_stratify
-                        )
-
-                        # =========================
-                        # 2. Preprocessor
-                        # =========================
-
-                        preprocessor = DataPreprocessor(
-                            num_cols=num_cols,
-                            cat_cols=cat_cols
-                        )
-
-                        transformer = preprocessor.get_transformer(
-                            scaler_type=select_Scaler_type,
-                            impute=select_impute,
-                            num_impute_strategy=select_num_impute_strategy if select_num_impute_strategy else None,
-                            cat_impute_strategy=select_cat_impute_strategy if select_cat_impute_strategy else None,
-                            encoder_feature_type=select_feature_encoder
-                        )
-
-                        # =========================
-                        # 3. Build Pipeline
-                        # =========================
-
-                        pipeline_builder = ModelPipelineBuilder(
-                            preprocessor=transformer
-                        )
-
-                        pipeline = pipeline_builder.build_pipeline(
-                            model_type=select_model_type,
-                            model_params=model_params
-                        )
-
-                        # =========================
-                        # 4. Task Type
-                        # =========================
-
-                        task_type = ModelPipelineBuilder.MODEL_INFO[
-                            select_model_type
-                        ]
-
-                        # =========================
-                        # 5. Evaluator
-                        # =========================
-
-                        evaluator = Evaluator(
-                            pipeline=pipeline,
-                            task_type=task_type
-                        )
-
-                        # =========================
-                        # 6. Train + Evaluate
-                        # =========================
-
-                        metrics_df = evaluator.evaluate(
-                            X_train,
-                            y_train,
-                            X_test,
-                            y_test
-                        )
-                        # =========================
-                        # 7. Cross Validation (optional)
-                        # =========================
-
-                        cv_df = None
-                        if enable_cv:
-                            cv_df = evaluator.cross_validation(
-                                feature_cols=num_cols + cat_cols,
-                                data=df,
-                                target_cols=select_target,
-                                cv=cv_folds
-                            )
-
-                        # =========================
-                        # 8. Store Model
-                        # =========================
-                        trained_model = pipeline
-                        st.success("Model trained successfully!")
-                    st.text("Result", text_alignment="center", width=1010)
-                    st.markdown(
-                        """
-                        ---
-                        
-                        """
+            if train_btn:
+                with st.spinner(
+                        "Training model..."
+                ):
+                    # =========================
+                    # 1. Split Data
+                    # =========================
+                    X = df.drop(columns=[select_target])
+                    y = df[select_target]
+                    num_cols = EDA.detect_numeric_type(data=X)
+                    cat_cols = EDA.detect_object_type(data=X)
+                    cat_cols = [c for c in cat_cols if c != select_target]
+                    num_cols = [c for c in num_cols if c != select_target]
+                    X_train, X_test, y_train, y_test = DataPreprocessor.set_setting_split(
+                        x=X, y=y.ravel(),
+                        test_size=select_test_size / 100,
+                        stratify=select_stratify
                     )
-                    st.dataframe(metrics_df)
+
+                    if select_target_encoder == "Label Encoder":
+                        label_encoder = LabelEncoder()
+                        y_train_encode = label_encoder.fit_transform(y_train)
+                        y_test_encode = label_encoder.transform(y_test)
+                    else:
+                        y_train_encode = y_train
+                        y_test_encode = y_test
+
+                    # =========================
+                    # 2. Preprocessor
+                    # =========================
+
+                    preprocessor = DataPreprocessor(
+                        num_cols=num_cols,
+                        cat_cols=cat_cols
+                    )
+
+                    transformer = preprocessor.get_transformer(
+                        scaler_type=select_Scaler_type,
+                        impute=select_impute,
+                        num_impute_strategy=select_num_impute_strategy if select_num_impute_strategy else None,
+                        cat_impute_strategy=select_cat_impute_strategy if select_cat_impute_strategy else None,
+                        encoder_feature_type=select_feature_encoder
+                    )
+
+                    # =========================
+                    # 3. Build Pipeline
+                    # =========================
+
+                    pipeline_builder = ModelPipelineBuilder(
+                        preprocessor=transformer
+                    )
+
+                    pipeline = pipeline_builder.build_pipeline(
+                        model_type=select_model_type,
+                        model_params=model_params
+                    )
+
+                    # =========================
+                    # 4. Task Type
+                    # =========================
+
+                    task_type = ModelPipelineBuilder.MODEL_INFO[
+                        select_model_type
+                    ]
+
+                    # =========================
+                    # 5. Evaluator
+                    # =========================
+
+                    evaluator = Evaluator(
+                        pipeline=pipeline,
+                        task_type=task_type
+                    )
+
+                    # =========================
+                    # 6. Train + Evaluate
+                    # =========================
+
+                    metrics_df = evaluator.evaluate(
+                        X_train,
+                        y_train_encode,
+                        X_test,
+                        y_test_encode
+                    )
+                    # =========================
+                    # 7. Cross Validation (optional)
+                    # =========================
+
+                    cv_df = None
+
+                    if enable_cv:
+
+                        if select_target_encoder == "Label Encoder":
+                            y_cv = label_encoder.fit_transform(y)
+                        else:
+                            y_cv = y
+
+                        cv_df = evaluator.cross_validation(
+                            X=X,
+                            y=y_cv,
+                            cv=cv_folds
+                        )
+
+                    # =========================
+                    # 8. Store Model
+                    # =========================
+                    trained_model = pipeline
+                    st.success("Model trained successfully!")
+                st.text("Result", text_alignment="center", width=1010)
+                st.markdown(
+                    """
+                    ---
+                    
+                    """
+                )
+                st.dataframe(metrics_df)
+                if enable_cv:
                     st.dataframe(cv_df)
-            except Exception as ex:
-                st.error(f"{ex}")
-
-
+                # ======= Confusion Matrix =======
+                if task_type == "classification":
+                    with st.expander("show Confusion Matrix"):
+                        st.plotly_chart(
+                            MetricPlot.plot_confusion_matrix(
+                                pipeline,
+                                X_test=X_test,
+                                y_test=y_test_encode
+                            )
+                        )
+                    with st.expander("show roc curve"):
+                        st.plotly_chart(
+                            MetricPlot.plot_roc_curve(
+                                pipeline=pipeline,
+                                X_test=X_test,
+                                y_test=y_test_encode
+                            )
+                        )
 
 
 else:
