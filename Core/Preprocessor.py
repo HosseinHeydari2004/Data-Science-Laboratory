@@ -1,5 +1,4 @@
 import numpy as np
-from category_encoders import TargetEncoder
 from pandas import Series, DataFrame
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -16,29 +15,17 @@ from sklearn.preprocessing import (
 
 class DataPreprocessor:
 
-    def __init__(
-            self,
-            num_cols: list,
-            cat_cols: list
-    ):
-
+    def __init__(self, num_cols: list, cat_cols: list):
         self.num_cols = num_cols
         self.cat_cols = cat_cols
 
     def get_transformer(
-
             self,
-
             scaler_type: str = "Standard Scaler",
-
             impute: bool = False,
-
             num_impute_strategy: str = "mean",
-
             cat_impute_strategy: str = "most_frequent",
-
             encoder_feature_type: str = "One Hot Encoder"
-
     ) -> ColumnTransformer:
 
         # =========================
@@ -46,11 +33,8 @@ class DataPreprocessor:
         # =========================
 
         scalers = {
-
             "Standard Scaler": StandardScaler(),
-
-            "MinMax Scaler": MinMaxScaler(),
-
+            "MinMax Scaler": MinMaxScaler(feature_range=(0, 1)),
             "Robust Scaler": RobustScaler()
         }
 
@@ -65,26 +49,14 @@ class DataPreprocessor:
 
         numeric_steps = []
 
-        if impute:
-            if num_impute_strategy is not None:
-                numeric_steps.append(
-                    (
-                        "imputer",
-                        SimpleImputer(
-                            strategy=num_impute_strategy
-                        )
-                    )
-                )
-            else:
-                numeric_steps = []
+        if impute and num_impute_strategy:
+            numeric_steps.append(
+                ("imputer", SimpleImputer(strategy=num_impute_strategy))
+            )
 
-        numeric_steps.append(
-            ("scaler", scaler)
-        )
+        numeric_steps.append(("scaler", scaler))
 
-        numeric_transformer = Pipeline(
-            steps=numeric_steps
-        )
+        numeric_transformer = Pipeline(steps=numeric_steps)
 
         # =========================
         # Encoders
@@ -93,29 +65,23 @@ class DataPreprocessor:
         encoders = {
 
             "One Hot Encoder":
-
                 OneHotEncoder(
                     handle_unknown="ignore",
-                    sparse_output=False
+                    sparse_output=False,
+                    dtype=np.float64
                 ),
 
             "Ordinal Encoder":
-
                 OrdinalEncoder(
                     handle_unknown="use_encoded_value",
-                    unknown_value=-1
-                ),
-
-            "Target Encoder":
-
-                TargetEncoder()
+                    unknown_value=-1,
+                    dtype=np.float64
+                )
         }
 
-        encoder_feature = encoders.get(
-            encoder_feature_type
-        )
+        encoder_feature = encoders.get(encoder_feature_type)
 
-        if encoder_feature is None:
+        if encoder_feature is None and self.cat_cols:
             raise ValueError(
                 "Encoder type must be specified when categorical columns are present."
             )
@@ -126,63 +92,44 @@ class DataPreprocessor:
 
         categorical_steps = []
 
-        if impute:
-            if cat_impute_strategy is not None:
-                categorical_steps.append(
-                    (
-                        "imputer",
-                        SimpleImputer(
-                            strategy=cat_impute_strategy
-                        )
-                    )
-                )
-            else:
-                categorical_steps = []
+        if impute and cat_impute_strategy:
+            categorical_steps.append(
+                ("imputer", SimpleImputer(strategy=cat_impute_strategy))
+            )
 
-        categorical_steps.append(
-            ("encoder", encoder_feature)
-        )
+        categorical_steps.append(("encoder", encoder_feature))
 
-        categorical_transformer = Pipeline(
-            steps=categorical_steps
-        )
+        categorical_transformer = Pipeline(steps=categorical_steps)
 
         # =========================
-        # Final ColumnTransformer
+        # ColumnTransformer
         # =========================
 
-        prep = ColumnTransformer(
+        transformers = []
 
-            transformers=[
+        if self.num_cols:
+            transformers.append(
+                ("num", numeric_transformer, self.num_cols)
+            )
 
-                (
-                    "num",
-                    numeric_transformer,
-                    self.num_cols
-                ),
+        if self.cat_cols:
+            transformers.append(
+                ("cat", categorical_transformer, self.cat_cols)
+            )
 
-                (
-                    "cat",
-                    categorical_transformer,
-                    self.cat_cols
-                )
-            ]
-        )
+        prep = ColumnTransformer(transformers=transformers)
 
         return prep
 
     @classmethod
     def set_setting_split(
             cls,
-            data: DataFrame,
-            feature_cols: list[str],
-            target_col: str,
+            x: np.ndarray,
+            y: np.ndarray,
             test_size: float = 0.2,
             stratify: bool = False,
     ) -> tuple[DataFrame, DataFrame, Series, Series]:
 
-        x = data[feature_cols]
-        y = data[target_col]
         if stratify:
             x_train, x_test, y_train, y_test = train_test_split(
                 x,
@@ -203,6 +150,7 @@ class DataPreprocessor:
 
     def get_config_df(
             self,
+            data: DataFrame,
             model_name: str,
             task_type: str,
             target_col: str,
@@ -219,67 +167,50 @@ class DataPreprocessor:
             cross_validation: bool = False,
             cv_folds: int | None = None
     ) -> DataFrame:
-
+        class_counts = data[target_col].value_counts().sort_index()
         num_val = ", ".join(self.num_cols) if self.num_cols else np.nan
         cat_val = ", ".join(self.cat_cols) if self.cat_cols else np.nan
-
+        class_distribution_str = " | ".join(
+            [f"{cls}: {count}" for cls, count in class_counts.items()]
+        )
         data = {
             "component": [
-
-                # Dataset
                 "target_column",
+                "class_distribution_str",
                 "numeric_features",
                 "categorical_features",
                 "n_train_samples",
                 "n_test_samples",
-
-                # Split
                 "train_size",
                 "test_size",
                 "stratify_enabled",
-
-                # Task / Model
                 "task_type",
                 "model_name",
-
-                # Preprocessing
                 "scaler",
                 "imputation_enabled",
                 "numeric_imputation_strategy",
                 "categorical_imputation_strategy",
                 "encoder",
-
-                # Validation
                 "cross_validation_enabled",
                 "cv_folds"
             ],
-
             "value": [
-
-                # Dataset
                 target_col,
+                class_distribution_str,
                 num_val,
                 cat_val,
                 n_train,
                 n_test,
-
-                # Split
                 f"{train_size * 100:.0f}%",
                 f"{test_size * 100:.0f}%",
                 stratify,
-
-                # Task / Model
                 task_type,
                 model_name,
-
-                # Preprocessing
                 scaler_type if self.num_cols else np.nan,
                 impute,
                 num_impute_strategy if impute and self.num_cols else np.nan,
                 cat_impute_strategy if impute and self.cat_cols else np.nan,
                 encoder_feature_type if self.cat_cols else np.nan,
-
-                # Validation
                 cross_validation,
                 cv_folds if cross_validation else np.nan
             ]
