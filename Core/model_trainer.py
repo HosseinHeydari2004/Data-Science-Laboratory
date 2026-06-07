@@ -92,7 +92,7 @@ class ModelPipelineBuilder:
         "Decision Tree": "classification",
         "Neural Network": "classification",
         "AdaBoost": "classification",
-        "XGBBoost": "classification",
+        "XGBoost": "classification",
         "LightGBM": "classification",
         "Extra Tree": "classification"
     }
@@ -202,9 +202,7 @@ class ModelParameterFactory:
             "bootstrap": st.checkbox(
                 "bootstrap", value=False
             ),
-            "n_jobs": st.checkbox(
-                "n_jobs", value=-1
-            )
+            "n_jobs": -1 if st.checkbox("use all cpu") else None
         }
 
     @staticmethod
@@ -320,9 +318,7 @@ class ModelParameterFactory:
             "bootstrap": st.checkbox(
                 "bootstrap", value=False
             ),
-            "n_jobs": st.checkbox(
-                "n_jobs", value=-1
-            )
+            "n_jobs": -1 if st.checkbox("use all cpu") else None
         }
 
     @staticmethod
@@ -581,9 +577,7 @@ class ModelParameterFactory:
                 "oob score",
                 value=False, key="0p92"
             ),
-            "n_jobs": st.checkbox(
-                "n jobs", value=-1, key="0ore"
-            )
+            "n_jobs": -1 if st.checkbox("use all cpu") else None
         }
 
     @staticmethod
@@ -709,14 +703,9 @@ class ModelParameterFactory:
                     "sigmoid"
                 ], index=2, key="0x4562lp"
             ),
-            "degree": (st.slider(
+            "degree": st.slider(
                 "Enter degree",
                 min_value=2, value=2, max_value=10, key="0xcvf4"
-            ),
-                       st.info(
-                           "The degree parameter is only applicable when the poly kernel is selected.",
-                           icon="ℹ️"
-                       )
             ),
             "gamma": st.selectbox(
                 "select gamma",
@@ -805,7 +794,7 @@ class ModelParameterFactory:
             ),
             "alpha": st.slider(
                 "Enter alpha",
-                min_value=0.0001, max_value=10.0, value=0.0001, key=""
+                min_value=0.0001, max_value=10.0, value=0.0001, key="0u83jd"
             ),
             "learning_rate": st.selectbox(
                 "Select learning rate",
@@ -876,9 +865,7 @@ class ModelParameterFactory:
                 "oob score",
                 value=False, key="0p92"
             ),
-            "n_jobs": st.checkbox(
-                "n jobs", value=-1, key="0ore"
-            )
+            "n_jobs": -1 if st.checkbox("use all cpu") else None
         }
 
     PARAMS_FACTORY = {
