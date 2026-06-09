@@ -74,12 +74,12 @@ if uploaded_file is not None:
         st.error(f"Error loading file: {e}")
         st.stop()
 
-    if st.button("save data in local", help=f"save your data in '{SAVE_PATH}'"):
-        try:
-            full_path = os.path.join(SAVE_PATH, uploaded_file.name)
-            uploaded_file.seek(0)
-            with open(full_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success(f"File saved to: '{full_path}'")
-        except Exception as e:
-            st.error(f"Error saving file: {e}")
+    # if st.button("save data in local", help=f"save your data in '{SAVE_PATH}'"):
+    #     try:
+    #         full_path = os.path.join(SAVE_PATH, uploaded_file.name)
+    #         uploaded_file.seek(0)
+    #         with open(full_path, "wb") as f:
+    #             f.write(uploaded_file.getbuffer())
+    #         st.success(f"File saved to: '{full_path}'")
+    #     except Exception as e:
+    #         st.error(f"Error saving file: {e}")
