@@ -196,7 +196,7 @@ class DataPreprocessor:
             ],
             "value": [
                 target_col,
-                class_distribution_str,
+                class_distribution_str if task_type == "classification" else None,
                 num_val,
                 cat_val,
                 n_train,
