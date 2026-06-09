@@ -81,7 +81,7 @@ This project is built using the following technologies and libraries:
 - **Plotly**
 - **Matplotlib**
 - **Seaborn**
-- **SHAP**
+- **SHAP** *(planned feature)*
 - **Weights & Biases (W&B)** *(planned feature)*
 - **FastAPI** *(planned feature)*
 - **Docker** *(planned feature)*
@@ -172,6 +172,8 @@ The long-term goal is to create a practical environment that reflects parts of r
 ## 📌 Roadmap
 
 - [ ] Feature selection tools
+- [ ] Model performance comparison
+- [ ] Model interpretability using SHAP
 - [ ] Hyperparameter tuning module
 - [ ] Experiment tracking integration with W&B
 - [ ] Automated reporting
