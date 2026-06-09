@@ -56,6 +56,8 @@ The project currently includes the following capabilities:
 The following features are planned for future development:
 
 - 🚧 **Feature Selection**
+- 🚧 **Model performance comparison**
+- 🚧 **Model interpretability using SHAP**
 - 🚧 **Advanced Hyperparameter Tuning**
 - 🚧 **Experiment Tracking with Weights & Biases (W&B)**
 - 🚧 **Automatic report generation**
