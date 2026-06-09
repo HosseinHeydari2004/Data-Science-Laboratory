@@ -1,41 +1,79 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
 from Core.eda import handle_MissingValue, EDA, handle_outliers, data_manipulation
-
 from Untils.Until import save_data
 from components.charts import seaborn_chart, plotly_charts
 
 st.title("📊 Exploratory Data Analysis (EDA)")
 st.markdown(
     """
-    This page is the **Exploratory Data Analysis (EDA)** section of the Streamlit app, used to quickly explore a dataset before modeling.  
-All parts are organized as **accordions/expanders** so you can open each section individually.
+    
+This page is the **Exploratory Data Analysis (EDA)** section of the Streamlit app, used to inspect, understand, clean, and visualize datasets before building machine learning models.
+All functionalities are organized into **expanders** so users can focus on specific analysis tasks when needed.
 
 ### Sections
 
 - **View dataset**
-  - Shows a sample of the dataset rows to inspect the data structure.
+  - Displays the dataset in multiple ways.
+  - Supports viewing the entire dataset, first/last rows, specific rows,
+    random samples, individual columns, filtered records, and custom queries.
+  - Helps users quickly inspect the structure and content of the data.
 
 - **Information dataset**
-  - Provides general info about the dataset such as number of rows/columns, data types (dtypes), missing values, and memory usage.
+  - Provides general information about the dataset.
+  - Displays column names, data types, missing values, duplicate records,
+    and overall dataset statistics.
+  - Includes tools for handling missing values, removing duplicates,
+    and converting date columns to datetime format.
 
 - **Describe data**
-  - Displays statistical summaries for numeric columns (mean, standard deviation, min/max, quartiles, etc.).
+  - Generates descriptive statistics for numerical features.
+  - Includes count, mean, standard deviation, minimum, maximum,
+    and quartile values.
+  - Helps identify the distribution and scale of variables.
 
 - **Unique values**
-  - Shows the unique values/counts for columns (especially categorical ones) to understand data diversity.
+  - Displays unique values and their frequencies for selected columns.
+  - Useful for understanding categorical variables and detecting
+    unexpected or inconsistent values.
 
 - **View outlier**
-  - Detects and displays outlier records.  
-  - This section includes an option to **reset the index** of the outliers dataframe so indices are clean and start from 0.
+  - Detects outliers using both **IQR** and **Z-Score** methods.
+  - Allows users to inspect detected outliers before removal.
+  - Supports deleting outlier records directly from the dataset.
+
+- **Data manipulation**
+  - Provides tools for modifying and cleaning the dataset interactively.
+  - Supports deleting single or multiple rows, removing columns,
+    renaming columns, and changing data types.
+  - Allows users to update the dataset directly from the interface
+    without writing code.
 
 - **Visualization**
-  - Provides plotting tools to explore distributions, patterns, correlations, and relationships between features.
+  - Provides both static and interactive visualization tools.
+  - Supports multiple chart types including:
+    - Histogram
+    - KDE Plot
+    - Box Plot
+    - Count Plot
+    - Scatter Plot
+    - Violin Plot
+    - Line Plot
+    - Correlation Heatmap
+  - Interactive visualizations are powered by Plotly and support
+    customization of colors, labels, scales, templates, and figure size.
+  - Helps users explore distributions, trends, relationships,
+    correlations, and patterns within the dataset.
 
-- **Auto EDA**
-  - Generates an automated EDA report (usually with charts and summaries) for quick analysis without manual setup.
-    """
+### Dataset Persistence
+
+- **Save Data**
+  - Saves the modified dataset after cleaning, transformation,
+    and exploratory analysis.
+  - Allows users to preserve their changes for future modeling
+    and machine learning workflows.
+"""
+
 )
 
 if 'df' in st.session_state:
@@ -1138,7 +1176,7 @@ if 'df' in st.session_state:
             with st.expander("box plot"):
                 select_x = st.selectbox(
                     "please select x",
-                    options=[None]+numeric + category + Time_dtype,
+                    options=[None] + numeric + category + Time_dtype,
                     index=0, key="select_x_plotly_box"
                 )
                 select_y = st.selectbox(
@@ -1202,7 +1240,7 @@ if 'df' in st.session_state:
                 pass
             with st.expander("heatmap"):
                 pass
-    if st.button("save data"):
+    if st.button("download data"):
         success, message = save_data(data=st.session_state['df'])
         if success:
             st.success(f"Data saved successfully at: '{message}'")

@@ -9,36 +9,137 @@ from components.metrics_plots import MetricPlot
 
 st.markdown(
     """
-    # 🔧 Machine Learning Modeling
+    
+# 🔧 Machine Learning Modeling
 
-This page is the **Modeling** section of the Streamlit app, designed to train, evaluate, and compare various machine learning models on your processed dataset.
-All tasks are organized as **accordions/expanders** to keep the interface clean and interactive.
+This page is the **Machine Learning Modeling** section of the Streamlit app, designed to build, train, evaluate, and compare machine learning models using the processed dataset.
+The workflow guides users through preprocessing, model selection, training, validation, and performance evaluation.
 
-## Sections
+### Sections
 
-*   **Data Preparation & Splitting**
-    *   Defines features (X) and target (y) variables.
-    *   Allows configuration of test/train split ratio and random state for reproducibility.
-*   **Model Selection**
-    *   Dropdown menu to choose from various algorithms (e.g., Random Forest, XGBoost, Linear Regression, etc.).
-    *   Hyperparameter tuning interface for selected models to optimize performance.
-*   **Training Process**
-    *   Triggers the model training pipeline.
-    *   Displays real-time training progress and execution logs.
-*   **Model Evaluation**
-    *   Generates performance metrics based on the task (e.g., Accuracy, F1-Score, RMSE, R²).
-    *   Includes confusion matrix and ROC-AUC curve visualization for classification tasks.
-*   **Feature Importance**
-    *   Visualizes which features have the most significant impact on model predictions.
-*   **Save/Download Model**
-    *   Allows you to export the trained model as a joblib file (`.joblib`) for deployment or future use.
-*   **Compare Results**
-    *   Provides a summary table to compare performance metrics across different runs or models.
+- **Learning Configuration**
+  - Supports both supervised and unsupervised learning workflows.
+  - Allows users to select the task type (Classification, Regression, Clustering, or Dimensionality Reduction).
+  - Provides access to a variety of machine learning algorithms.
 
----
+- **Target Selection**
+  - Lets users choose the target column for supervised learning tasks.
+  - Automatically separates features and target variables during training.
 
+- **Data Preprocessing**
+  - Supports multiple scaling methods:
+    - No Scaling
+    - Standard Scaler
+    - MinMax Scaler
+    - Robust Scaler
+  - Supports feature encoding:
+    - Ordinal Encoder
+    - One Hot Encoder
+  - Supports target encoding using Label Encoder.
+  - Includes optional missing-value imputation for numerical and categorical features.
 
-    """
+- **Train/Test Split**
+  - Allows configuration of the test size ratio.
+  - Supports stratified splitting for classification tasks.
+  - Ensures reproducible data partitioning for model evaluation.
+
+- **Cross Validation**
+  - Optional K-Fold Cross Validation.
+  - Configurable number of folds.
+  - Provides more reliable performance estimates across multiple data splits.
+
+- **Configuration Summary**
+  - Displays a detailed overview of the selected preprocessing pipeline,
+    dataset split, encoding methods, scaling configuration,
+    and cross-validation settings before training.
+
+- **Model Parameters**
+  - Shows the hyperparameters used by the selected model.
+  - Helps users understand and review model configurations before training.
+
+- **Model Training**
+  - Automatically builds a preprocessing and machine learning pipeline.
+  - Trains the selected model using the configured settings.
+  - Provides progress feedback during execution.
+
+- **Model Evaluation**
+  - Generates performance metrics after training.
+  - Classification metrics may include:
+    - Accuracy
+    - Precision
+    - Recall
+    - F1-Score
+    - ROC-AUC
+  - Regression metrics may include:
+    - MAE
+    - MSE
+    - RMSE
+    - R² Score
+
+- **Classification Visualizations**
+  - Confusion Matrix
+  - ROC Curve
+  - Learning Curve
+  - Helps evaluate classification performance and detect overfitting or underfitting.
+
+- **Regression Visualizations**
+  - Actual vs Predicted Plot
+  - Learning Curve
+  - Helps assess prediction quality and model generalization.
+
+- **Model Comparison**
+  - Allows comparison between evaluation results and cross-validation scores.
+  - Helps identify the most suitable model for the dataset.
+
+### Supported Models
+
+#### Classification
+- Logistic Regression
+- Random Forest
+- Support Vector Machine (SVM)
+- K-Nearest Neighbors (KNN)
+- Gaussian Naive Bayes
+- Decision Tree
+- Neural Network (MLP)
+- AdaBoost
+- XGBoost
+- LightGBM
+- Extra Trees
+
+#### Regression
+- Linear Regression
+- Ridge Regression
+- Lasso Regression
+- ElasticNet
+- Random Forest Regressor
+- Gradient Boosting Regressor
+- KNN Regressor
+- Decision Tree Regressor
+- Support Vector Regressor (SVR)
+- Extra Trees Regressor
+- AdaBoost Regressor
+- XGBoost Regressor
+- Neural Network Regressor
+- LightGBM Regressor
+
+#### Unsupervised Learning
+- K-Means Clustering
+- DBSCAN
+- PCA
+- t-SNE
+
+### Pipeline Workflow
+
+1. Select learning type and model.
+2. Configure preprocessing options.
+3. Choose train/test split settings.
+4. Enable optional cross-validation.
+5. Review configuration summary.
+6. Train the model.
+7. Evaluate performance.
+8. Analyze visualizations and metrics.
+"""
+
 )
 if 'df' in st.session_state:
     df = st.session_state['df']
