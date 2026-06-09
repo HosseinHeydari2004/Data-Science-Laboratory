@@ -3,6 +3,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 from sklearn.metrics import auc, roc_curve
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import learning_curve
 from sklearn.pipeline import Pipeline
 
 
@@ -67,6 +68,118 @@ class MetricPlot:
             yaxis=dict(title='True Positive Rate', gridcolor='lightgray'),
             width=700, height=600,
             legend=dict(x=0.7, y=0.1, bgcolor='rgba(255,255,255,0.5)')
+        )
+
+        return fig
+
+    @classmethod
+    def plot_regression_fit(cls, pipline: Pipeline, X_test, y_test):
+        y_pred = pipline.predict(X_test)
+        y_test = np.array(y_test).ravel()
+        y_pred = np.array(y_pred).ravel()
+        min_val = min(y_test.min(), y_pred.min())
+        max_val = max(y_test.max(), y_pred.max())
+
+        fig = go.Figure()
+
+        # Scatter: Actual vs Predicted
+        fig.add_trace(go.Scatter(
+            x=y_test,
+            y=y_pred,
+            mode="markers",
+            marker=dict(
+                color="royalblue",
+                size=8,
+                opacity=0.6
+            ),
+            name="Predictions"
+        ))
+
+        # Ideal Line (y = x)
+        fig.add_trace(go.Scatter(
+            x=[min_val, max_val],
+            y=[min_val, max_val],
+            mode="lines",
+            line=dict(color="red", dash="dash", width=3),
+            name="Ideal Fit"
+        ))
+
+        fig.update_layout(
+            title=dict(
+                text="Regression Fit (Actual vs Predicted)",
+                font=dict(size=24),
+                x=0.35
+            ),
+            xaxis=dict(title="Actual Values"),
+            yaxis=dict(title="Predicted Values"),
+            width=750,
+            height=600
+        )
+
+        return fig
+
+    @classmethod
+    def plot_learning_curve(
+            cls,
+            pipeline,
+            X,
+            y,
+            cv=5,
+            scoring="r2",
+            n_jobs=-1
+    ):
+        train_sizes, train_scores, val_scores = learning_curve(
+            estimator=pipeline,
+            X=X,
+            y=y,
+            cv=cv,
+            scoring=scoring,
+            train_sizes=np.linspace(0.1, 1.0, 10),
+            n_jobs=n_jobs
+        )
+
+        train_mean = train_scores.mean(axis=1)
+        train_std = train_scores.std(axis=1)
+
+        val_mean = val_scores.mean(axis=1)
+        val_std = val_scores.std(axis=1)
+
+        fig = go.Figure()
+
+        # Train Curve
+        fig.add_trace(
+            go.Scatter(
+                x=train_sizes,
+                y=train_mean,
+                mode="lines+markers",
+                name="Training Score"
+            )
+        )
+
+        # Validation Curve
+        fig.add_trace(
+            go.Scatter(
+                x=train_sizes,
+                y=val_mean,
+                mode="lines+markers",
+                name="Validation Score"
+            )
+        )
+
+        fig.update_layout(
+            title=dict(
+                text="Learning Curve",
+                x=0.43,
+                font=dict(size=24)
+            ),
+            xaxis_title="Training Examples",
+            yaxis_title=scoring.upper(),
+            width=800,
+            height=600,
+            legend=dict(
+                x=0.01,
+                y=0.99
+            )
         )
 
         return fig
