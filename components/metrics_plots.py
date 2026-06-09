@@ -73,8 +73,8 @@ class MetricPlot:
         return fig
 
     @classmethod
-    def plot_regression_fit(cls, pipline: Pipeline, X_test, y_test):
-        y_pred = pipline.predict(X_test)
+    def plot_regression_fit(cls, pipeline: Pipeline, X_test, y_test):
+        y_pred = pipeline.predict(X_test)
         y_test = np.array(y_test).ravel()
         y_pred = np.array(y_pred).ravel()
         min_val = min(y_test.min(), y_pred.min())
