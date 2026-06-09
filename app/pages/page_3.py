@@ -5,6 +5,7 @@ from Core.Preprocessor import DataPreprocessor
 from Core.eda import EDA
 from Core.evaluator import Evaluator
 from Core.model_trainer import ModelParameterFactory, ModelPipelineBuilder
+from Untils.Until import save_model
 from components.metrics_plots import MetricPlot
 
 st.markdown(
@@ -359,6 +360,34 @@ if 'df' in st.session_state:
                                 y_test=y_test_encode
                             )
                         )
+                    with st.expander("Learning Curve plot"):
+                        lr_curve_classification = MetricPlot.plot_learning_curve(
+                            pipeline=pipeline,
+                            X=X, y=y.ravel(),
+                            cv=5, scoring="accuracy"
+                        )
+                        st.plotly_chart(lr_curve_classification)
+                elif task_type == "regression":
+                    with st.expander("Actual vs Predicted"):
+                        fig_fit = MetricPlot.plot_regression_fit(
+                            pipline=pipeline,
+                            X_test=X_test,
+                            y_test=y_test_encode
+                        )
+                        st.plotly_chart(fig_fit, use_container_width=True)
+                    with st.expander("Learning Curve plot"):
+                        lr_curve_regression = MetricPlot.plot_learning_curve(
+                            pipeline=pipeline,
+                            X=X, y=y.ravel(),
+                            cv=5
+                        )
+                        st.plotly_chart(lr_curve_regression)
+                with st.expander("Save model"):
+                    if st.button("Save Model"):
+                        with st.spinner("Saving model..."):
+                            save_model(pipeline=pipeline)
+                        st.success("Model saved successfully ✅")
+
 
 
 else:
