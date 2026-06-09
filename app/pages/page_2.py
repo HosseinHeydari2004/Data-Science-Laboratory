@@ -1183,7 +1183,7 @@ if 'df' in st.session_state:
                     "please enter x axis size:", value=13, key="select_tickfont_x_3")
                 select_tickfont_y = st.number_input(
                     "please enter y axis size:", value=13, key="select_tickfont_y_3")
-                if st.button("plot"):
+                if st.button("plotting", use_container_width=True, icon="📈"):
                     st.plotly_chart(
                         plotly_charts.boxplot(
                             data=df, x=select_x, y=select_y,
