@@ -55,7 +55,8 @@ class Evaluator:
         y_pred = self.predict(
             X_test
         )
-        y_probs = self.pipeline.predict_proba(X_test)[:, 1]
+        if self.task_type == "classification":
+            y_probs = self.pipeline.predict_proba(X_test)[:, 1]
 
         if self.task_type == "regression":
 
