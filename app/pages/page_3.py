@@ -5,7 +5,6 @@ from Core.Preprocessor import DataPreprocessor
 from Core.eda import EDA
 from Core.evaluator import Evaluator
 from Core.model_trainer import ModelParameterFactory, ModelPipelineBuilder
-from Untils.Until import save_model
 from components.metrics_plots import MetricPlot
 
 st.markdown(
@@ -218,12 +217,12 @@ if 'df' in st.session_state:
             model_params = ModelParameterFactory.get_params(
                 select_model_type
             )
-
+            if st.button("Show configuration model summary", use_container_width=True, icon="📅"):
+                st.dataframe(model_params)
             train_btn = st.button(
                 "🚀 Train Model",
                 use_container_width=True
             )
-
             if train_btn:
                 with st.spinner(
                         "Training model..."
@@ -370,7 +369,7 @@ if 'df' in st.session_state:
                 elif task_type == "regression":
                     with st.expander("Actual vs Predicted"):
                         fig_fit = MetricPlot.plot_regression_fit(
-                            pipline=pipeline,
+                            pipeline=pipeline,
                             X_test=X_test,
                             y_test=y_test_encode
                         )
@@ -382,12 +381,27 @@ if 'df' in st.session_state:
                             cv=5
                         )
                         st.plotly_chart(lr_curve_regression)
-                with st.expander("Save model"):
-                    if st.button("Save Model"):
-                        with st.spinner("Saving model..."):
-                            save_model(pipeline=pipeline)
-                        st.success("Model saved successfully ✅")
+                # if "save_model_clicked" not in st.session_state:
+                #     st.session_state.save_model_clicked = False
+                #
+                #
+                # def save_model_action():
+                #     st.session_state.save_model_clicked = True
 
+                # with st.expander("Save model", expanded=True):
+                #
+                #     st.button(
+                #         "Save Model",
+                #         use_container_width=True,
+                #         on_click=save_model_action
+                #     )
+                #
+                #     if st.session_state.save_model_clicked:
+                #         with st.spinner("Saving model..."):
+                #             save_model(pipeline=pipeline)
+                #
+                #         st.success("Model saved successfully ✅")
+                #         st.session_state.save_model_clicked = False
 
 
 else:
