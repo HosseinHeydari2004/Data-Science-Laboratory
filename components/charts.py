@@ -470,7 +470,7 @@ class plotly_charts:
             cls, data: pd.DataFrame = None, x: pd.Series | str | object = None,
             y: pd.Series | str | object = None, color: pd.Series | str | object = None,
             hover_data: dict[Any] | list[Any] = None, log_x: bool | object = False,
-            log_y: bool | object = True, figsize: tuple[int, int] = (900, 600),
+            log_y: bool | object = False, figsize: tuple[int, int] = (900, 600),
             main_title: str = "", xlabel: str = "",
             ylabel: str = "", main_title_fontsize: int = 15,
             xlabel_fontsize: int = 12, ylabel_fontsize: int = 12,
@@ -492,3 +492,41 @@ class plotly_charts:
             template=template
         )
         return fig
+
+    @classmethod
+    def lineplot(
+            cls,
+            data: pd.DataFrame | pd.Series | object | str = None,
+            x: pd.DataFrame | pd.Series | object | str = None,
+            y: pd.DataFrame | pd.Series | object | str = None,
+            color: pd.Series | str | object = None,
+            hover_data: dict[Any] | list[Any] = None, log_x: bool | object = False,
+            log_y: bool | object = False, figsize: tuple[int, int] = (900, 600),
+            main_title: str = "", xlabel: str = "",
+            ylabel: str = "", main_title_fontsize: int = 15,
+            xlabel_fontsize: int = 12, ylabel_fontsize: int = 12,
+            tickfont_x: int = 14, tickfont_y: int = 14,
+            template: str | object = None
+    ):
+        x_sorted = x
+        y_sorted = y
+        if isinstance(x, str) and isinstance(x, str):
+            x_sorted = data[x].sort_values()
+            y_sorted = data[y].sort_values()
+        fig = px.line(
+            data_frame=data, x=x_sorted, y=y_sorted,
+            color=color, hover_data=hover_data, log_x=log_x,
+            log_y=log_y, width=figsize[0], height=figsize[1]
+        )
+        fig.update_layout(
+            title=main_title,
+            title_font=dict(size=main_title_fontsize),
+            xaxis_title=xlabel,
+            yaxis_title=ylabel,
+            xaxis=dict(tickfont=dict(size=tickfont_x), title_font=dict(size=xlabel_fontsize)),
+            yaxis=dict(tickfont=dict(size=tickfont_y), title_font=dict(size=ylabel_fontsize)),
+            template=template
+        )
+        return fig
+    # @classmethod
+    # def
