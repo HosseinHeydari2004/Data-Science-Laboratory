@@ -918,11 +918,11 @@ if 'df' in st.session_state:
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category + Time_dtype, index=0, key="hue6",
+                    options=[None] + category + Time_dtype + numeric , index=0, key="hue6",
                 )
                 select_style = st.selectbox(
                     "please select style",
-                    options=[None] + category + Time_dtype, index=0, key="select_style2"
+                    options=[None] + category + Time_dtype + numeric, index=0, key="select_style2"
                 )
                 select_size = st.selectbox(
                     "please select size",
@@ -1237,7 +1237,65 @@ if 'df' in st.session_state:
             with st.expander("violin plot"):
                 pass
             with st.expander("line plot"):
-                pass
+                select_x = st.selectbox(
+                    "please select x",
+                    options=[None] + numeric + category + Time_dtype,
+                    index=0, key="select_x_line"
+                )
+                select_y = st.selectbox(
+                    "please select y",
+                    options=[None] + numeric + category + Time_dtype,
+                    index=0, key="select_y_0i82"
+                )
+                select_color = st.selectbox(
+                    "please select color",
+                    options=[None] + numeric + category + Time_dtype,
+                    index=0, key="select_color_e53"
+                )
+                select_log_x = st.selectbox(
+                    "please select log x",
+                    options=[False, True], index=0, key="select_log_2wd"
+                )
+                select_log_y = st.selectbox(
+                    "please select log y",
+                    options=[False, True], index=0, key="select_log_y_pl85"
+                )
+                select_template = st.selectbox(
+                    "please select template",
+                    options=[
+                        "plotly", "plotly_white", "plotly_dark",
+                        "ggplot2", "seaborn", "simple_white",
+                        "presentation", "none"
+                    ],
+                    index=0, key="select_template_h824"
+                )
+                select_width = st.number_input("please enter width figure:", value=900, key="select_width0cv4")
+                select_height = st.number_input("please enter height figure:", value=500, key="select_height0cod")
+                select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel_qw2d")
+                select_ylabel = st.text_input("please enter ylabel:", key="select_ylabe_er43")
+                select_main_title_fontsize = st.number_input(
+                    "please enter main title fontsize:", value=15, key="select_main_title_fontsize13")
+                select_xlabel_fontsize = st.number_input(
+                    "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize13")
+                select_ylabel_fontsize = st.number_input(
+                    "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize13")
+                select_tickfont_x = st.number_input(
+                    "please enter x axis size:", value=13, key="select_tickfont_x_4")
+                select_tickfont_y = st.number_input(
+                    "please enter y axis size:", value=13, key="select_tickfont_y_4")
+                if st.button("plotting", use_container_width=True, icon="📈", key="po932f"):
+                    st.plotly_chart(
+                        plotly_charts.lineplot(
+                            data=df, x=select_x, y=select_y,
+                            color=select_color, log_x=select_log_x,
+                            log_y=select_log_y, template=select_template,
+                            figsize=(select_width, select_height),
+                            main_title=select_main_title, xlabel=select_xlabel, ylabel=select_ylabel,
+                            main_title_fontsize=select_main_title_fontsize,
+                            xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                            tickfont_x=select_tickfont_x, tickfont_y=select_tickfont_y,
+                        )
+                    )
             with st.expander("heatmap"):
                 pass
     if st.button("download data"):
