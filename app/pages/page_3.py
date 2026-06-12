@@ -125,8 +125,7 @@ The workflow guides users through preprocessing, model selection, training, vali
 #### Unsupervised Learning
 - K-Means Clustering
 - DBSCAN
-- PCA
-- t-SNE
+
 
 ### Pipeline Workflow
 
