@@ -918,7 +918,7 @@ if 'df' in st.session_state:
                 )
                 select_hue = st.selectbox(
                     "please select hue",
-                    options=[None] + category + Time_dtype + numeric , index=0, key="hue6",
+                    options=[None] + category + Time_dtype + numeric, index=0, key="hue6",
                 )
                 select_style = st.selectbox(
                     "please select style",
@@ -1235,7 +1235,80 @@ if 'df' in st.session_state:
                         )
                     )
             with st.expander("violin plot"):
-                pass
+                try:
+                    select_x = st.selectbox(
+                        "please select x",
+                        options=[None] + numeric + category + Time_dtype,
+                        index=0, key="select_x_plotly_w23e"
+                    )
+                    select_y = st.selectbox(
+                        "please select y",
+                        options=[None] + numeric + category + Time_dtype,
+                        index=0, key="select_y_plotly_dfr4"
+                    )
+                    select_color = st.selectbox(
+                        "please select color",
+                        options=[None] + numeric + category + Time_dtype,
+                        index=0, key="select_color_plotly_02.p"
+                    )
+                    select_box_mode = st.checkbox(
+                        "box", value=False, key="0po92d"
+                    )
+                    select_violin_mode = st.selectbox(
+                        "select violin mode",
+                        options=[
+                            "group",
+                            "overlay",
+                        ], index=0, key="p-5g"
+                    )
+                    select_log_x = st.selectbox(
+                        "please select log x",
+                        options=[False, True], index=0, key="select_log_x_plotly_vr42"
+                    )
+                    select_log_y = st.selectbox(
+                        "please select log y",
+                        options=[False, True], index=0, key="select_log_y_plotly_za2s"
+                    )
+                    select_template = st.selectbox(
+                        "please select template",
+                        options=[
+                            "plotly", "plotly_white", "plotly_dark",
+                            "ggplot2", "seaborn", "simple_white",
+                            "presentation", "none"
+                        ],
+                        index=0, key="select_template_plotly_q12w"
+                    )
+                    select_width = st.number_input("please enter width figure:", value=900, key="select_width16")
+                    select_height = st.number_input("please enter height figure:", value=500, key="select_height16")
+                    select_main_title = st.text_input("please enter main title:", key="select_main_title16")
+                    select_xlabel = st.text_input("please enter xlabel:", key="select_xlabel16")
+                    select_ylabel = st.text_input("please enter ylabel:", key="select_ylabel16")
+                    select_main_title_fontsize = st.number_input(
+                        "please enter main title fontsize:", value=15, key="select_main_title_fontsize16")
+                    select_xlabel_fontsize = st.number_input(
+                        "please enter xlabel fontsize:", value=13, key="select_xlabel_fontsize16")
+                    select_ylabel_fontsize = st.number_input(
+                        "please enter ylabel fontsize:", value=13, key="select_ylabel_fontsize16")
+                    select_tickfont_x = st.number_input(
+                        "please enter x axis size:", value=13, key="select_tickfont_x_7")
+                    select_tickfont_y = st.number_input(
+                        "please enter y axis size:", value=13, key="select_tickfont_y_7")
+                    if st.button("plotting", use_container_width=True, icon="📈", key="ple43"):
+                        st.plotly_chart(
+                            plotly_charts.violin_plot(
+                                data=df, x=select_x, y=select_y,
+                                color=select_color, hover_data=select_hover_data,
+                                box=select_box_mode, violin_mode=select_violin_mode,
+                                log_y=select_log_y, template=select_template,
+                                figsize=(select_width, select_height),
+                                main_title=select_main_title, xlabel=select_xlabel, ylabel=select_ylabel,
+                                main_title_fontsize=select_main_title_fontsize,
+                                xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                                tickfont_x=select_tickfont_x, tickfont_y=select_tickfont_y,
+                            )
+                        )
+                except Exception as ex:
+                    st.error(f"{ex}")
             with st.expander("line plot"):
                 select_x = st.selectbox(
                     "please select x",
@@ -1283,7 +1356,7 @@ if 'df' in st.session_state:
                     "please enter x axis size:", value=13, key="select_tickfont_x_4")
                 select_tickfont_y = st.number_input(
                     "please enter y axis size:", value=13, key="select_tickfont_y_4")
-                if st.button("plotting", use_container_width=True, icon="📈", key="po932f"):
+                if st.button("plotting", use_container_width=True, icon="📈", key="po9378f"):
                     st.plotly_chart(
                         plotly_charts.lineplot(
                             data=df, x=select_x, y=select_y,
