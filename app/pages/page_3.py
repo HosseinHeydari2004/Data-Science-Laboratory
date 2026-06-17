@@ -164,7 +164,6 @@ if 'df' in st.session_state:
         },
         "unsupervised": {
             "clustering": ["K-Means", "DBSCAN"],
-            "dimensionality_reduction": ["PCA", "t-SNE"]
         }
     }
     SCALER = [
@@ -195,10 +194,13 @@ if 'df' in st.session_state:
         if select_task_type:
             model_options = MODELS[select_learning_type][select_task_type]
             select_model_type = st.selectbox("Select Model", model_options)
-            select_target = st.selectbox(
-                "select target",
-                options=EDA.list_columns(data=df), key="0t42"
-            )
+            if select_task_type == "clustering":
+                pass
+            else:
+                select_target = st.selectbox(
+                    "select target",
+                    options=EDA.list_columns(data=df), key="0t42"
+                )
             select_Scaler_type = st.selectbox(
                 "select Scaler Type",
                 options=SCALER, index=0, key="select_Scaler_type"
@@ -212,10 +214,11 @@ if 'df' in st.session_state:
                 "select Feature Encoder Type",
                 options=[None] + FEATURE_ENCODER, index=0, key="select_feature_encoder"
             )
-            select_target_encoder = st.selectbox(
-                "Select target encoder",
-                options=TARGET_ENCODER, key="select_target_encoder"
-            )
+            if select_task_type != "clustering":
+                select_target_encoder = st.selectbox(
+                    "Select target encoder",
+                    options=TARGET_ENCODER, key="select_target_encoder"
+                )
             select_impute = st.checkbox(
                 "Enable Imputation",
                 value=False
@@ -253,27 +256,30 @@ if 'df' in st.session_state:
                         "Categorical Fill Value",
                         value="Unknown"
                     )
-            select_test_size = st.slider(
-                "select test size(%)",
-                min_value=20, max_value=50, value=30, key="select_test_size",
-                step=1
-            )
-            select_stratify = st.checkbox(
-                "Enable Stratify",
-                value=False, key="select_stratify"
-            )
-            enable_cv = st.checkbox(
-                "Enable Cross Validation",
-                value=False
-            )
-            cv_folds = None
-            if enable_cv:
-                cv_folds = st.slider(
-                    "CV Folds",
-                    min_value=2,
-                    max_value=10,
-                    value=5
+            if (select_task_type == "regression") or (select_task_type == "classification"):
+                select_test_size = st.slider(
+                    "select test size(%)",
+                    min_value=20, max_value=50, value=30, key="select_test_size",
+                    step=1
                 )
+                select_stratify = st.checkbox(
+                    "Enable Stratify",
+                    value=False, key="select_stratify"
+                )
+                enable_cv = st.checkbox(
+                    "Enable Cross Validation",
+                    value=False
+                )
+                cv_folds = None
+                if enable_cv:
+                    cv_folds = st.slider(
+                        "CV Folds",
+                        min_value=2,
+                        max_value=10,
+                        value=5
+                    )
+            else:
+                pass
 
             st.markdown(
                 """
@@ -287,20 +293,24 @@ if 'df' in st.session_state:
                 num_cols = EDA.detect_numeric_type(data=df)
                 cat_cols = EDA.detect_object_type(data=df)
                 pr = DataPreprocessor(num_cols=num_cols, cat_cols=cat_cols)
-                test_ratio = select_test_size / 100
+                test_ratio = (select_test_size / 100) if (select_task_type == "classification") or (
+                        select_task_type == "regression") else None
 
                 st.dataframe(pr.get_config_df(
                     data=df,
                     model_name=select_model_type,
                     task_type=select_task_type,
-                    target_col=select_target,
-                    test_size=test_ratio,
-                    train_size=1 - test_ratio,
-                    stratify=select_stratify,
-                    n_test=int(len(df) * test_ratio),
-                    n_train=len(df) - int(len(df) * test_ratio),
-                    cross_validation=enable_cv,
-                    cv_folds=cv_folds,
+                    target_col=select_target if (select_task_type == "classification") or (
+                            select_task_type == "regression") else None,
+                    test_size=test_ratio if (select_task_type == "classification") or (
+                            select_task_type == "regression") else None,
+                    train_size=1 - test_ratio if (select_task_type == "classification") or (
+                            select_task_type == "regression") else None,
+                    stratify=select_stratify if select_task_type != "clustering" else None,
+                    n_test=int(len(df) * test_ratio) if select_task_type != "clustering" else None,
+                    n_train=len(df) - int(len(df) * test_ratio) if select_task_type != "clustering" else len(df),
+                    cross_validation=enable_cv if select_task_type != "clustering" else None,
+                    cv_folds=cv_folds if select_task_type != "clustering" else None,
                     scaler_type=select_Scaler_type,
                     impute=select_impute,
                     num_impute_strategy=select_num_impute_strategy,
@@ -323,164 +333,241 @@ if 'df' in st.session_state:
                 "🚀 Train Model",
                 use_container_width=True
             )
+
             if train_btn:
-                with st.spinner(
-                        "Training model..."
-                ):
-                    # =========================
-                    # 1. Split Data
-                    # =========================
-                    X = df.drop(columns=[select_target])
-                    y = df[select_target]
-                    num_cols = EDA.detect_numeric_type(data=X)
-                    cat_cols = EDA.detect_object_type(data=X)
-                    cat_cols = [c for c in cat_cols if c != select_target]
-                    num_cols = [c for c in num_cols if c != select_target]
-                    X_train, X_test, y_train, y_test = DataPreprocessor.set_setting_split(
-                        x=X, y=y.ravel(),
-                        test_size=select_test_size / 100,
-                        stratify=select_stratify
-                    )
 
-                    if select_target_encoder == "Label Encoder":
-                        label_encoder = LabelEncoder()
-                        y_train_encode = label_encoder.fit_transform(y_train)
-                        y_test_encode = label_encoder.transform(y_test)
+                with st.spinner("Training model..."):
+
+                    # ==================================
+                    # Clustering
+                    # ==================================
+
+                    if select_task_type == "clustering":
+
+                        X = df.copy()
+
+                        num_cols = EDA.detect_numeric_type(X)
+                        cat_cols = EDA.detect_object_type(X)
+
+                        preprocessor = DataPreprocessor(
+                            num_cols=num_cols,
+                            cat_cols=cat_cols
+                        )
+
+                        transformer = preprocessor.get_transformer(
+                            scaler_type=select_Scaler_type,
+                            impute=select_impute,
+                            num_impute_strategy=select_num_impute_strategy,
+                            cat_impute_strategy=select_cat_impute_strategy,
+                            encoder_feature_type=select_feature_encoder
+                        )
+
+                        pipeline = ModelPipelineBuilder(
+                            preprocessor=transformer
+                        ).build_pipeline(
+                            model_type=select_model_type,
+                            model_params=model_params
+                        )
+
+                        evaluator = Evaluator(
+                            pipeline=pipeline,
+                            task_type="clustering"
+                        )
+
+                        metrics_df = evaluator.clustering_report(X)
+
+                        st.success("Model trained successfully!")
+
+                        st.markdown("---")
+                        st.text(
+                            "Result",
+                            text_alignment="center",
+                            width=1010
+                        )
+
+                        st.dataframe(metrics_df)
+
+                    # ==================================
+                    # Classification / Regression
+                    # ==================================
+
                     else:
-                        y_train_encode = y_train
-                        y_test_encode = y_test
 
-                    # =========================
-                    # 2. Preprocessor
-                    # =========================
+                        X = df.drop(columns=[select_target])
+                        y = df[select_target]
 
-                    preprocessor = DataPreprocessor(
-                        num_cols=num_cols,
-                        cat_cols=cat_cols
-                    )
+                        num_cols = EDA.detect_numeric_type(X)
+                        cat_cols = EDA.detect_object_type(X)
 
-                    transformer = preprocessor.get_transformer(
-                        scaler_type=select_Scaler_type,
-                        impute=select_impute,
-                        num_impute_strategy=select_num_impute_strategy if select_num_impute_strategy else None,
-                        cat_impute_strategy=select_cat_impute_strategy if select_cat_impute_strategy else None,
-                        encoder_feature_type=select_feature_encoder
-                    )
-
-                    # =========================
-                    # 3. Build Pipeline
-                    # =========================
-
-                    pipeline_builder = ModelPipelineBuilder(
-                        preprocessor=transformer
-                    )
-
-                    pipeline = pipeline_builder.build_pipeline(
-                        model_type=select_model_type,
-                        model_params=model_params
-                    )
-
-                    # =========================
-                    # 4. Task Type
-                    # =========================
-
-                    task_type = ModelPipelineBuilder.MODEL_INFO[
-                        select_model_type
-                    ]
-
-                    # =========================
-                    # 5. Evaluator
-                    # =========================
-
-                    evaluator = Evaluator(
-                        pipeline=pipeline,
-                        task_type=task_type
-                    )
-
-                    # =========================
-                    # 6. Train + Evaluate
-                    # =========================
-
-                    metrics_df = evaluator.evaluate(
-                        X_train,
-                        y_train_encode,
-                        X_test,
-                        y_test_encode
-                    )
-                    # =========================
-                    # 7. Cross Validation (optional)
-                    # =========================
-
-                    cv_df = None
-
-                    if enable_cv:
+                        X_train, X_test, y_train, y_test = (
+                            DataPreprocessor.set_setting_split(
+                                x=X,
+                                y=y.ravel(),
+                                test_size=select_test_size / 100,
+                                stratify=select_stratify
+                            )
+                        )
 
                         if select_target_encoder == "Label Encoder":
-                            y_cv = label_encoder.fit_transform(y)
+
+                            label_encoder = LabelEncoder()
+
+                            y_train_encode = label_encoder.fit_transform(
+                                y_train
+                            )
+
+                            y_test_encode = label_encoder.transform(
+                                y_test
+                            )
+
                         else:
-                            y_cv = y
 
-                        cv_df = evaluator.cross_validation(
-                            X=X,
-                            y=y_cv,
-                            cv=cv_folds
+                            y_train_encode = y_train
+                            y_test_encode = y_test
+
+                        preprocessor = DataPreprocessor(
+                            num_cols=num_cols,
+                            cat_cols=cat_cols
                         )
 
-                    # =========================
-                    # 8. Store Model
-                    # =========================
-                    trained_model = pipeline
-                    st.success("Model trained successfully!")
-                st.text("Result", text_alignment="center", width=1010)
-                st.markdown(
-                    """
-                    ---
-                    
-                    """
-                )
-                st.dataframe(metrics_df)
-                if enable_cv:
-                    st.dataframe(cv_df)
-                # ======= Confusion Matrix =======
-                if task_type == "classification":
-                    with st.expander("show Confusion Matrix"):
-                        st.plotly_chart(
-                            MetricPlot.plot_confusion_matrix(
-                                pipeline,
-                                X_test=X_test,
-                                y_test=y_test_encode
+                        transformer = preprocessor.get_transformer(
+                            scaler_type=select_Scaler_type,
+                            impute=select_impute,
+                            num_impute_strategy=select_num_impute_strategy,
+                            cat_impute_strategy=select_cat_impute_strategy,
+                            encoder_feature_type=select_feature_encoder
+                        )
+
+                        pipeline = ModelPipelineBuilder(
+                            preprocessor=transformer
+                        ).build_pipeline(
+                            model_type=select_model_type,
+                            model_params=model_params
+                        )
+
+                        task_type = ModelPipelineBuilder.MODEL_INFO[
+                            select_model_type
+                        ]
+
+                        evaluator = Evaluator(
+                            pipeline=pipeline,
+                            task_type=task_type
+                        )
+
+                        metrics_df = evaluator.evaluate(
+                            X_train,
+                            y_train_encode,
+                            X_test,
+                            y_test_encode
+                        )
+
+                        cv_df = None
+
+                        if enable_cv:
+
+                            if select_target_encoder == "Label Encoder":
+
+                                y_cv = label_encoder.fit_transform(y)
+
+                            else:
+
+                                y_cv = y
+
+                            cv_df = evaluator.cross_validation(
+                                X=X,
+                                y=y_cv,
+                                cv=cv_folds
                             )
+
+                        st.success("Model trained successfully!")
+
+                        st.markdown("---")
+                        st.text(
+                            "Result",
+                            text_alignment="center",
+                            width=1010
                         )
-                    with st.expander("show roc curve"):
-                        st.plotly_chart(
-                            MetricPlot.plot_roc_curve(
-                                pipeline=pipeline,
-                                X_test=X_test,
-                                y_test=y_test_encode
-                            )
-                        )
-                    with st.expander("Learning Curve plot"):
-                        lr_curve_classification = MetricPlot.plot_learning_curve(
-                            pipeline=pipeline,
-                            X=X, y=y.ravel(),
-                            cv=5, scoring="accuracy"
-                        )
-                        st.plotly_chart(lr_curve_classification)
-                elif task_type == "regression":
-                    with st.expander("Actual vs Predicted"):
-                        fig_fit = MetricPlot.plot_regression_fit(
-                            pipeline=pipeline,
-                            X_test=X_test,
-                            y_test=y_test_encode
-                        )
-                        st.plotly_chart(fig_fit, use_container_width=True)
-                    with st.expander("Learning Curve plot"):
-                        lr_curve_regression = MetricPlot.plot_learning_curve(
-                            pipeline=pipeline,
-                            X=X, y=y.ravel(),
-                            cv=5
-                        )
-                        st.plotly_chart(lr_curve_regression)
+
+                        st.dataframe(metrics_df)
+
+                        if cv_df is not None:
+                            st.dataframe(cv_df)
+
+                        # =============================
+                        # Classification Plots
+                        # =============================
+
+                        if task_type == "classification":
+
+                            with st.expander(
+                                    "Show Confusion Matrix"
+                            ):
+
+                                st.plotly_chart(
+                                    MetricPlot.plot_confusion_matrix(
+                                        pipeline=pipeline,
+                                        X_test=X_test,
+                                        y_test=y_test_encode
+                                    )
+                                )
+
+                            with st.expander(
+                                    "Show ROC Curve"
+                            ):
+
+                                st.plotly_chart(
+                                    MetricPlot.plot_roc_curve(
+                                        pipeline=pipeline,
+                                        X_test=X_test,
+                                        y_test=y_test_encode
+                                    )
+                                )
+
+                            with st.expander(
+                                    "Learning Curve"
+                            ):
+
+                                st.plotly_chart(
+                                    MetricPlot.plot_learning_curve(
+                                        pipeline=pipeline,
+                                        X=X,
+                                        y=y.ravel(),
+                                        cv=5,
+                                        scoring="accuracy"
+                                    )
+                                )
+
+                        # =============================
+                        # Regression Plots
+                        # =============================
+
+                        elif task_type == "regression":
+
+                            with st.expander(
+                                    "Actual vs Predicted"
+                            ):
+
+                                st.plotly_chart(
+                                    MetricPlot.plot_regression_fit(
+                                        pipeline=pipeline,
+                                        X_test=X_test,
+                                        y_test=y_test_encode
+                                    ),
+                                    use_container_width=True
+                                )
+
+                            with st.expander(
+                                    "Learning Curve"
+                            ):
+
+                                st.plotly_chart(
+                                    MetricPlot.plot_learning_curve(
+                                        pipeline=pipeline,
+                                        X=X,
+                                        y=y.ravel(),
+                                        cv=5
+                                    )
+                                )
                 # if "save_model_clicked" not in st.session_state:
                 #     st.session_state.save_model_clicked = False
                 #
