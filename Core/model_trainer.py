@@ -1,5 +1,7 @@
 import streamlit as st
 from lightgbm import LGBMRegressor, LGBMClassifier
+from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import ExtraTreesClassifier
@@ -57,7 +59,10 @@ class ModelPipelineBuilder:
         "AdaBoost": AdaBoostClassifier,
         "XGBoost": XGBClassifier,
         "LightGBM": LGBMClassifier,
-        "Extra Tree": ExtraTreesClassifier
+        "Extra Tree": ExtraTreesClassifier,
+        "K-Means": KMeans,
+        "DBSCAN": DBSCAN
+
     }
     MODEL_INFO = {
 
@@ -94,7 +99,9 @@ class ModelPipelineBuilder:
         "AdaBoost": "classification",
         "XGBoost": "classification",
         "LightGBM": "classification",
-        "Extra Tree": "classification"
+        "Extra Tree": "classification",
+        "K-Means": "clustering",
+        "DBSCAN": "clustering"
     }
 
     def __init__(self, preprocessor: ColumnTransformer):
@@ -137,6 +144,51 @@ class ModelPipelineBuilder:
 
 
 class ModelParameterFactory:
+    @staticmethod
+    def k_means():
+        return {
+            "n_clusters": st.slider(
+                "select n_clusters", value=2, max_value=12, min_value=2, key="9jm3"
+            ),
+            "init": st.selectbox(
+                "select init mode",
+                options=[
+                    "k-means++",
+                    "random"
+                ], index=0, key="w2aac"
+            ),
+            "max_iter": st.slider(
+                "select max iteration", value=300, min_value=20,
+                max_value=1000, key="0lo2"
+            ),
+        }
+
+    @staticmethod
+    def dbscan():
+        return {
+            "eps": st.slider(
+                "select eps",
+                value=0.5, min_value=0.1, max_value=2.0
+            ),
+            "min_samples": st.slider(
+                "select min samples",
+                value=5, min_value=2, max_value=35
+            ),
+            "algorithm": st.selectbox(
+                "select algorithm",
+                options=[
+                    "auto",
+                    "ball_tree",
+                    "kd_tree",
+                    "brute"
+                ], index=0
+            ),
+            "n_jobs": st.checkbox(
+                "n_jobs",
+                value=False
+            )
+        }
+
     @staticmethod
     def logistic_regression():
         return {
@@ -892,7 +944,9 @@ class ModelParameterFactory:
         "Neural Network": neural_network,
         "AdaBoost": adaboost,
         "XGBoost": xgboost,
-        "LightGBM": lightgbm
+        "LightGBM": lightgbm,
+        "K-Means": k_means,
+        "DBSCAN": dbscan
 
     }
 
