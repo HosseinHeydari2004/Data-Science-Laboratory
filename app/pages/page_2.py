@@ -1369,9 +1369,7 @@ if 'df' in st.session_state:
                             tickfont_x=select_tickfont_x, tickfont_y=select_tickfont_y,
                         )
                     )
-            with st.expander("heatmap"):
-                pass
-    if st.button("download data"):
+    if st.button("download data", help="download data"):
         success, message = save_data(data=st.session_state['df'])
         if success:
             st.success(f"Data saved successfully at: '{message}'")
