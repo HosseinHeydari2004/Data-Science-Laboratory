@@ -8,7 +8,10 @@ from sklearn.metrics import (
     r2_score,
     mean_absolute_error,
     mean_squared_error,
-    roc_auc_score
+    roc_auc_score,
+    silhouette_score,
+    calinski_harabasz_score,
+    davies_bouldin_score
 )
 
 from sklearn.model_selection import cross_validate
@@ -41,7 +44,8 @@ class Evaluator:
             X_train,
             y_train,
             X_test,
-            y_test
+            y_test,
+            label=None
     ) -> pd.DataFrame:
 
         y_train = pd.Series(y_train).squeeze()
@@ -115,9 +119,25 @@ class Evaluator:
                     y_test, y_probs
                 )
             }
+        elif self.task_type == "clustering":
+            labels = self.pipeline.fit_predict(X_test)
+            results = {
+                "Silhouette Score": silhouette_score(
+                    X_test,
+                    labels
+                ),
+                "Calinski Harabasz Score": calinski_harabasz_score(
+                    X_test,
+                    labels
+                ),
+                "Davies Bouldin Score": davies_bouldin_score(
+                    X_test,
+                    labels
+                ),
+                "Number Of Clusters": len(set(labels))
+            }
 
         else:
-
             raise ValueError(
                 f"Unknown task_type: {self.task_type}"
             )
@@ -130,7 +150,6 @@ class Evaluator:
             y,
             cv: int = 5
     ) -> pd.DataFrame:
-
         y = pd.Series(y).squeeze()
 
         if self.task_type == "regression":
@@ -229,7 +248,6 @@ class Evaluator:
             y,
             cv: int = 5
     ) -> pd.DataFrame:
-
         eval_df = self.evaluate(
             X_train,
             y_train,
@@ -247,3 +265,36 @@ class Evaluator:
             [eval_df, cv_df],
             axis=1
         )
+
+    def clustering_report(
+            self,
+            X
+    ) -> pd.DataFrame:
+
+        labels = self.pipeline.fit_predict(X)
+
+        results = {
+
+            "Silhouette Score":
+                silhouette_score(
+                    X,
+                    labels
+                ),
+
+            "Calinski Harabasz":
+                calinski_harabasz_score(
+                    X,
+                    labels
+                ),
+
+            "Davies Bouldin":
+                davies_bouldin_score(
+                    X,
+                    labels
+                ),
+            "inertia": None,
+            "Clusters":
+                len(set(labels))
+        }
+
+        return pd.DataFrame([results])
