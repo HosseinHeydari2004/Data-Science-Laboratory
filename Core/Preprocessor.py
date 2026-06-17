@@ -150,29 +150,34 @@ class DataPreprocessor:
 
     def get_config_df(
             self,
-            data: DataFrame,
-            model_name: str,
-            task_type: str,
-            target_col: str,
-            test_size: float,
-            train_size: float,
-            stratify: bool,
-            n_train: int,
-            n_test: int,
-            scaler_type,
-            impute,
-            num_impute_strategy,
-            cat_impute_strategy,
-            encoder_feature_type,
+            data: DataFrame = None,
+            model_name: str = None,
+            task_type: str = None,
+            target_col: str = None,
+            test_size: float = None,
+            train_size: float = None,
+            stratify: bool = None,
+            n_train: int = None,
+            n_test: int = None,
+            scaler_type=None,
+            impute=None,
+            num_impute_strategy=None,
+            cat_impute_strategy=None,
+            encoder_feature_type=None,
             cross_validation: bool = False,
             cv_folds: int | None = None
     ) -> DataFrame:
-        class_counts = data[target_col].value_counts().sort_index()
+        if task_type == "classification":
+            class_counts = data[target_col].value_counts().sort_index()
+            class_distribution_str = " | ".join(
+                [f"{cls}: {count}" for cls, count in class_counts.items()]
+            )
+        else:
+            class_counts = None
+            class_distribution_str = None
         num_val = ", ".join(self.num_cols) if self.num_cols else np.nan
         cat_val = ", ".join(self.cat_cols) if self.cat_cols else np.nan
-        class_distribution_str = " | ".join(
-            [f"{cls}: {count}" for cls, count in class_counts.items()]
-        )
+
         data = {
             "component": [
                 "target_column",
@@ -195,15 +200,15 @@ class DataPreprocessor:
                 "cv_folds"
             ],
             "value": [
-                target_col,
+                target_col if (task_type == "classification") or (task_type == "regression") else None,
                 class_distribution_str if task_type == "classification" else None,
                 num_val,
                 cat_val,
                 n_train,
                 n_test,
-                f"{train_size * 100:.0f}%",
-                f"{test_size * 100:.0f}%",
-                stratify,
+                f"{train_size * 100:.0f}%" if task_type != "clustering" else len(data),
+                f"{test_size * 100:.0f}%" if task_type != "clustering" else None ,
+                stratify if task_type != "clustering" else None,
                 task_type,
                 model_name,
                 scaler_type if self.num_cols else np.nan,
