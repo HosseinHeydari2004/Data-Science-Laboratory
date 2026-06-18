@@ -183,3 +183,7 @@ class MetricPlot:
         )
 
         return fig
+
+    @classmethod
+    def clustering_visualization(cls):
+        pass
