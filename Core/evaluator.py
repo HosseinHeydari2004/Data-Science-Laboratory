@@ -266,35 +266,28 @@ class Evaluator:
             axis=1
         )
 
-    def clustering_report(
-            self,
-            X
-    ) -> pd.DataFrame:
+    def clustering_report(self, X) -> pd.DataFrame:
 
         labels = self.pipeline.fit_predict(X)
 
+        n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+        if n_clusters > 1:
+            silhouette = silhouette_score(X, labels)
+            calinski = calinski_harabasz_score(X, labels)
+            davies = davies_bouldin_score(X, labels)
+        else:
+            silhouette = None
+            calinski = None
+            davies = None
+
         results = {
+            "Silhouette Score": silhouette,
+            "Calinski Harabasz": calinski,
+            "Davies Bouldin": davies,
+            "Inertia": getattr(self.pipeline['model'], "inertia_", None),
+            "Clusters": n_clusters,
 
-            "Silhouette Score":
-                silhouette_score(
-                    X,
-                    labels
-                ),
-
-            "Calinski Harabasz":
-                calinski_harabasz_score(
-                    X,
-                    labels
-                ),
-
-            "Davies Bouldin":
-                davies_bouldin_score(
-                    X,
-                    labels
-                ),
-            "inertia": None,
-            "Clusters":
-                len(set(labels))
         }
 
         return pd.DataFrame([results])
