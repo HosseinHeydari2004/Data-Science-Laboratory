@@ -130,7 +130,7 @@ pip install -r requirements.txt
 Launch the Streamlit app:
 
 ``` bash
-streamlit run app.py
+streamlit run main_page.py
 ```
 
 The application will automatically open in your browser.
