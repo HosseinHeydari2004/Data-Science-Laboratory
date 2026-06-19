@@ -5,7 +5,7 @@
 The purpose of this project is to provide a unified environment where users can move through the core stages of a real-world data science workflow — from **data exploration and preprocessing** to **model training, evaluation, comparison, and interpretability** — all in one place.
 
 <p align="center">
-  <img src="picture/p1.png" alt="Data Science Laboratory Preview" width="850">
+  <img src="picture/p_1.png" alt="Data Science Laboratory Preview" width="850">
 </p>
 
 > ⚠️ **Project Status**  
