@@ -10,6 +10,53 @@ from sklearn.pipeline import Pipeline
 class MetricPlot:
     @classmethod
     def plot_confusion_matrix(cls, pipeline: Pipeline, X_test, y_test):
+        """
+        Generate an interactive confusion matrix visualization.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            A trained scikit-learn Pipeline object with a `predict` method.
+        X_test : array-like
+            Feature matrix for testing. Accepts numpy arrays, pandas DataFrames, or similar.
+        y_test : array-like
+            True labels for the test set. Accepts numpy arrays, pandas Series, or lists.
+
+        Returns
+        -------
+        plotly.graph_objs.Figure
+            A Plotly Figure object containing the interactive confusion matrix.
+
+        Raises
+        ------
+        AttributeError
+            If the pipeline does not have a `predict` method.
+        ValueError
+            If X_test and y_test have incompatible shapes or types.
+
+        Examples
+        --------
+        >>> from sklearn.pipeline import Pipeline
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.model_selection import train_test_split
+        >>>
+        >>> X, y = make_classification(n_samples=100, n_features=4, random_state=42)
+        >>> X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        >>>
+        >>> pipeline = Pipeline([('classifier', RandomForestClassifier())])
+        >>> pipeline.fit(X_train, y_train)
+        >>>
+        >>> fig = MetricPlot.plot_confusion_matrix(pipeline, X_test, y_test)
+        >>> fig.show()
+
+        Notes
+        -----
+        - The plot uses the "viridis" color scale by default.
+        - Labels on both axes are automatically sorted based on unique values in `y_test`.
+        - The plot is interactive, allowing zoom, pan, and hover details.
+        - This method is Prefect-compatible and can be used in Flow tasks for monitoring model performance.
+        """
         y_pred = pipeline.predict(X_test)
         fig = px.imshow(
             confusion_matrix(y_test, y_pred),
@@ -28,6 +75,54 @@ class MetricPlot:
 
     @classmethod
     def plot_roc_curve(cls, pipeline: Pipeline, X_test, y_test):
+        """
+            Generate an interactive ROC (Receiver Operating Characteristic) curve plot.
+
+            Parameters
+            ----------
+            pipeline : Pipeline
+                A trained scikit-learn Pipeline object with a `predict_proba` method.
+            X_test : array-like
+                Feature matrix for testing. Accepts numpy arrays, pandas DataFrames, or similar.
+            y_test : array-like
+                True binary labels for the test set. Accepts numpy arrays, pandas Series, or lists.
+
+            Returns
+            -------
+            plotly.graph_objs.Figure
+                A Plotly Figure object containing the interactive ROC curve.
+
+            Raises
+            ------
+            AttributeError
+                If the pipeline does not have a `predict_proba` method.
+            ValueError
+                If y_test is not binary or X_test and y_test have incompatible shapes.
+
+            Examples
+            --------
+            >>> from sklearn.pipeline import Pipeline
+            >>> from sklearn.ensemble import RandomForestClassifier
+            >>> from sklearn.datasets import make_classification
+            >>> from sklearn.model_selection import train_test_split
+            >>>
+            >>> X, y = make_classification(n_samples=100, n_features=4, random_state=42)
+            >>> X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+            >>>
+            >>> pipeline = Pipeline([('classifier', RandomForestClassifier())])
+            >>> pipeline.fit(X_train, y_train)
+            >>>
+            >>> fig = MetricPlot.plot_roc_curve(pipeline, X_test, y_test)
+            >>> fig.show()
+
+            Notes
+            -----
+            - The plot displays the ROC curve with the Area Under the Curve (AUC) score.
+            - A diagonal dashed line represents random guessing (AUC = 0.5).
+            - The optimal threshold is calculated using Youden's J statistic (J = tpr - fpr).
+            - The optimal threshold point is marked in red with its value displayed.
+            - This method is Prefect-compatible and can be used in Flow tasks for model evaluation.
+        """
         y_probs = pipeline.predict_proba(X_test)[:, 1]
         fpr, tpr, thresholds = roc_curve(y_test, y_probs)
         J = tpr - fpr
@@ -74,6 +169,55 @@ class MetricPlot:
 
     @classmethod
     def plot_regression_fit(cls, pipeline: Pipeline, X_test, y_test):
+        """
+        Generate a regression fit plot comparing actual vs predicted values.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            A trained scikit-learn Pipeline object with a `predict` method.
+        X_test : array-like
+            Feature matrix for testing. Accepts numpy arrays, pandas DataFrames, or similar.
+        y_test : array-like
+            True target values for the test set. Accepts numpy arrays, pandas Series, or lists.
+
+        Returns
+        -------
+        plotly.graph_objs.Figure
+            A Plotly Figure object containing the regression fit scatter plot.
+
+        Raises
+        ------
+        AttributeError
+            If the pipeline does not have a `predict` method.
+        ValueError
+            If X_test and y_test have incompatible shapes or types.
+
+        Examples
+        --------
+        >>> from sklearn.pipeline import Pipeline
+        >>> from sklearn.ensemble import RandomForestRegressor
+        >>> from sklearn.datasets import make_regression
+        >>> from sklearn.model_selection import train_test_split
+        >>>
+        >>> X, y = make_regression(n_samples=100, n_features=4, noise=0.1, random_state=42)
+        >>> X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        >>>
+        >>> pipeline = Pipeline([('regressor', RandomForestRegressor())])
+        >>> pipeline.fit(X_train, y_train)
+        >>>
+        >>> fig = MetricPlot.plot_regression_fit(pipeline, X_test, y_test)
+        >>> fig.show()
+
+        Notes
+        -----
+        - The plot displays actual values on the x-axis and predicted values on the y-axis.
+        - A red dashed diagonal line (y = x) represents the ideal perfect prediction.
+        - Points closer to the diagonal indicate better model performance.
+        - Points above the diagonal indicate over-prediction, below indicate under-prediction.
+        - The plot automatically adjusts axis limits based on the data range.
+        - This method is Prefect-compatible and can be used in Flow tasks for regression model evaluation.
+        """
         y_pred = pipeline.predict(X_test)
         y_test = np.array(y_test).ravel()
         y_pred = np.array(y_pred).ravel()
@@ -128,6 +272,64 @@ class MetricPlot:
             scoring="r2",
             n_jobs=-1
     ):
+        """
+        Generate a learning curve plot showing training and validation scores.
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            A scikit-learn Pipeline object to be evaluated.
+        X : array-like
+            Feature matrix. Accepts numpy arrays, pandas DataFrames, or similar.
+        y : array-like
+            Target values. Accepts numpy arrays, pandas Series, or lists.
+        cv : int, default=5
+            Number of cross-validation folds.
+        scoring : str, default="r2"
+            Scoring metric to evaluate. Common options: "r2", "neg_mean_squared_error",
+            "accuracy", "roc_auc", etc. See sklearn metrics for more options.
+        n_jobs : int, default=-1
+            Number of parallel jobs to run. -1 means using all processors.
+
+        Returns
+        -------
+        plotly.graph_objs.Figure
+            A Plotly Figure object containing the learning curve plot.
+
+        Raises
+        ------
+        ValueError
+            If the pipeline is not fitted or invalid parameters are provided.
+
+        Examples
+        --------
+        >>> from sklearn.pipeline import Pipeline
+        >>> from sklearn.ensemble import RandomForestRegressor
+        >>> from sklearn.datasets import make_regression
+        >>>
+        >>> X, y = make_regression(n_samples=1000, n_features=10, noise=0.1, random_state=42)
+        >>> pipeline = Pipeline([('regressor', RandomForestRegressor())])
+        >>>
+        >>> fig = MetricPlot.plot_learning_curve(
+        ...     pipeline, X, y,
+        ...     cv=5,
+        ...     scoring="r2",
+        ...     n_jobs=-1
+        ... )
+        >>> fig.show()
+
+        Notes
+        -----
+        - The plot displays training scores and cross-validation scores as functions of training set size.
+        - Training scores are shown with markers and lines in the default color.
+        - Validation scores are shown with markers and lines in a contrasting color.
+        - The y-axis label is automatically set to the uppercase scoring metric name.
+        - The plot helps diagnose bias-variance tradeoff:
+            - High training score, low validation score: Overfitting
+            - Both scores low: Underfitting
+            - Both scores high and converging: Good fit
+        - This method is Prefect-compatible and can be used in Flow tasks for model diagnostics.
+        """
         train_sizes, train_scores, val_scores = learning_curve(
             estimator=pipeline,
             X=X,
