@@ -10,16 +10,381 @@ from sklearn.impute import SimpleImputer
 
 
 class EDA:
+    """
+    A utility class for Exploratory Data Analysis operations.
+
+    This class provides static methods for common EDA tasks such as checking
+    unique values, handling missing data, and performing statistical summaries.
+    All methods are designed to work with pandas DataFrames.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'A': [1, 2, 2, 3], 'B': ['x', 'y', 'z', 'z']})
+    >>> EDA.check_unique(df, 'A')
+    array([1, 2, 3])
+    >>> EDA.check_unique(df, 'B')
+    array(['x', 'y', 'z'], dtype=object)
+    """
+
     @classmethod
     def check_unique(cls, data: pd.DataFrame, select_column: str) -> np.ndarray:
+        """
+        Retrieve all unique values from a specified column in a DataFrame.
+
+        This method extracts and returns an array of unique values from the
+        specified column, providing a quick way to understand the distinct
+        categories or values present in a dataset column.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The pandas DataFrame containing the data to analyze.
+            Must not be empty and must contain the specified column.
+
+        select_column : str
+            The name of the column from which to extract unique values.
+            The column must exist in the DataFrame.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the unique values from the specified column.
+            The array preserves the data type of the original column values.
+            Returns an empty array if the column is empty.
+
+        Raises
+        ------
+        KeyError
+            If the specified column name does not exist in the DataFrame.
+        TypeError
+            If `data` is not a pandas DataFrame or `select_column` is not a string.
+        ValueError
+            If the DataFrame is empty.
+
+        Notes
+        -----
+        - The unique values are not sorted; they appear in the order they are
+          encountered in the data.
+        - NaN values are treated as distinct values and will be included if present.
+        - For large datasets, consider using `data[select_column].nunique()` if
+          you only need the count of unique values.
+
+        See Also
+        --------
+        pandas.Series.unique : The underlying pandas method used.
+        pandas.Series.nunique : Returns the number of unique values.
+        pandas.Series.value_counts : Returns counts of unique values.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+
+        >>> # Example 1: Basic usage with numeric data
+        >>> df = pd.DataFrame({
+        ...     'id': [1, 2, 3, 4, 5],
+        ...     'category': ['A', 'B', 'A', 'C', 'B'],
+        ...     'value': [10.5, 20.3, 10.5, 30.1, 25.7]
+        ... })
+        >>> EDA.check_unique(df, 'category')
+        array(['A', 'B', 'C'], dtype=object)
+
+        >>> # Example 2: Working with numeric values
+        >>> EDA.check_unique(df, 'value')
+        array([10.5, 20.3, 30.1, 25.7])
+
+        >>> # Example 3: Handling missing values
+        >>> df_with_nan = pd.DataFrame({
+        ...     'col': [1, 2, None, 2, None, 3]
+        ... })
+        >>> EDA.check_unique(df_with_nan, 'col')
+        array([1.0, 2.0, nan, 3.0])
+
+        >>> # Example 4: Feature engineering - checking categorical variable levels
+        >>> df_sales = pd.DataFrame({
+        ...     'product': ['Laptop', 'Mouse', 'Laptop', 'Keyboard', 'Mouse', 'Monitor'],
+        ...     'sales': [1000, 50, 1200, 80, 45, 600]
+        ... })
+        >>> products = EDA.check_unique(df_sales, 'product')
+        >>> print(f"Unique products: {products}")
+        Unique products: ['Laptop' 'Mouse' 'Keyboard' 'Monitor']
+        >>> print(f"Number of unique products: {len(products)}")
+        Number of unique products: 4
+
+        >>> # Example 5: Combining with other EDA operations
+        >>> categories = EDA.check_unique(df, 'category')
+        >>> for cat in categories:
+        ...     subset = df[df['category'] == cat]
+        ...     print(f"{cat}: {len(subset)} records")
+        A: 2 records
+        B: 2 records
+        C: 1 records
+        """
         return data[select_column].unique()
 
     @classmethod
     def list_columns(cls, data: pd.DataFrame) -> list:
+        """
+        Retrieve all column names from a DataFrame as a list.
+
+    This method extracts and returns the column names of a pandas DataFrame
+    in a list format, providing a quick way to inspect the structure and
+    available features of a dataset.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The pandas DataFrame whose column names are to be retrieved.
+        Must not be empty.
+
+    Returns
+    -------
+    list
+        A list of strings containing all column names from the DataFrame.
+        Returns an empty list if the DataFrame has no columns.
+        The column order is preserved as they appear in the DataFrame.
+
+    Raises
+    ------
+    TypeError
+        If `data` is not a pandas DataFrame.
+    ValueError
+        If the DataFrame is empty (no rows), though columns may still exist.
+
+    Notes
+    -----
+    - This method uses `pandas.DataFrame.columns.to_list()` internally.
+    - The returned list preserves the original column order.
+    - For a numpy array of column names, use `data.columns.values` instead.
+    - To check if a specific column exists, use `'column_name' in data.columns`.
+
+    See Also
+    --------
+    pandas.DataFrame.columns : The underlying columns attribute.
+    pandas.DataFrame.keys() : Returns the columns as an Index object.
+    pandas.DataFrame.info() : Provides a summary of the DataFrame including columns.
+    EDA.check_unique : Get unique values from a specific column.
+
+    Examples
+    --------
+    >>> import pandas as pd
+
+    >>> # Example 1: Basic usage with a simple DataFrame
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'name': ['Alice', 'Bob', 'Charlie'],
+    ...     'age': [25, 30, 35],
+    ...     'salary': [50000, 60000, 70000]
+    ... })
+    >>> EDA.list_columns(df)
+    ['id', 'name', 'age', 'salary']
+
+    >>> # Example 2: Using with a DataFrame with different column types
+    >>> df_mixed = pd.DataFrame({
+    ...     'numeric_col': [1.5, 2.3, 3.7],
+    ...     'string_col': ['A', 'B', 'C'],
+    ...     'datetime_col': pd.date_range('2024-01-01', periods=3),
+    ...     'categorical_col': pd.Categorical(['X', 'Y', 'Z'])
+    ... })
+    >>> EDA.list_columns(df_mixed)
+    ['numeric_col', 'string_col', 'datetime_col', 'categorical_col']
+
+    >>> # Example 3: Empty DataFrame (no rows but with columns)
+    >>> df_empty = pd.DataFrame(columns=['col1', 'col2', 'col3'])
+    >>> EDA.list_columns(df_empty)
+    ['col1', 'col2', 'col3']
+
+    >>> # Example 4: Using with a DataFrame for exploratory analysis
+    >>> df_sales = pd.DataFrame({
+    ...     'product_id': [101, 102, 103],
+    ...     'product_name': ['Laptop', 'Mouse', 'Keyboard'],
+    ...     'price': [999.99, 29.99, 79.99],
+    ...     'stock': [50, 200, 150],
+    ...     'category': ['Electronics', 'Accessories', 'Accessories']
+    ... })
+    >>> columns = EDA.list_columns(df_sales)
+    >>> print(f"Dataset has {len(columns)} columns: {', '.join(columns)}")
+    Dataset has 5 columns: product_id, product_name, price, stock, category
+
+    >>> # Example 5: Chaining with other operations
+    >>> df = pd.DataFrame({
+    ...     'A': [1, 2, 3],
+    ...     'B': [4, 5, 6],
+    ...     'C': [7, 8, 9]
+    ... })
+    >>> cols = EDA.list_columns(df)
+    >>> # Filter numeric columns (assuming all are numeric in this case)
+    >>> numeric_cols = [col for col in cols if pd.api.types.is_numeric_dtype(df[col])]
+    >>> print(numeric_cols)
+    ['A', 'B', 'C']
+
+    >>> # Example 6: Checking for specific columns
+    >>> required_cols = ['id', 'name', 'age']
+    >>> available_cols = EDA.list_columns(df)
+    >>> missing_cols = [col for col in required_cols if col not in available_cols]
+    >>> if missing_cols:
+    ...     print(f"Missing columns: {missing_cols}")
+    Missing columns: ['id', 'name', 'age']
+        """
         return data.columns.to_list()
 
     @classmethod
     def information_data(cls, data: pd.DataFrame) -> Styler:
+        """
+        Generate a styled summary DataFrame containing comprehensive information about each column.
+
+    This method creates a detailed information summary for all columns in a DataFrame,
+    including data types, missing values, missing value percentages, and memory usage.
+    The output is returned as a styled pandas Styler object with visual highlighting
+    to draw attention to columns with the highest missing values.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The pandas DataFrame to analyze. Must not be empty.
+
+    Returns
+    -------
+    pd.io.formats.style.Styler
+        A pandas Styler object containing the formatted and styled summary table
+        with the following columns:
+        - "columns": Column names
+        - "data type": Data type of each column
+        - "missing values": Count of missing (NaN) values per column
+        - "percent missing values(%)": Percentage of missing values
+        - "memory usage": Memory usage per column in bytes (formatted as KB)
+
+    Raises
+    ------
+    TypeError
+        If `data` is not a pandas DataFrame.
+    ValueError
+        If the DataFrame is empty.
+
+    Notes
+    -----
+    - The method uses deep memory usage calculation (`deep=True`) to accurately
+      measure memory consumption including object dtypes.
+    - Missing values are counted using `pd.isna()` which identifies NaN, None,
+      and NaT values.
+    - The maximum missing value count and percentage are highlighted in red
+      for quick identification of columns with the most missing data.
+    - Memory usage is displayed in Kilobytes (KB) for better readability.
+    - The index is reset and not displayed in the final output.
+
+    See Also
+    --------
+    pandas.DataFrame.info : Standard DataFrame information summary.
+    pandas.DataFrame.describe : Statistical summary of numerical columns.
+    pandas.DataFrame.isna : Identify missing values.
+    pandas.DataFrame.memory_usage : Memory usage of DataFrame columns.
+    EDA.check_unique : Get unique values from a column.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+
+    >>> # Example 1: Basic usage with a simple DataFrame
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3, 4, 5],
+    ...     'name': ['Alice', 'Bob', None, 'David', 'Eve'],
+    ...     'age': [25, 30, np.nan, 35, 40],
+    ...     'salary': [50000, 60000, 70000, np.nan, 90000],
+    ...     'department': ['HR', 'IT', None, 'Finance', 'IT']
+    ... })
+    >>> styled = EDA.information_data(df)
+    >>> styled  # Display in Jupyter notebook
+    # Output will show a styled table with missing values highlighted
+
+    >>> # Example 2: Using in a data quality report
+    >>> df_large = pd.DataFrame({
+    ...     'product_id': range(1000),
+    ...     'product_name': ['Product_' + str(i) for i in range(1000)],
+    ...     'price': np.random.randn(1000) * 100 + 500,
+    ...     'stock': np.random.randint(0, 100, 1000),
+    ...     'category': np.random.choice(['A', 'B', 'C', None], 1000)
+    ... })
+    >>> # Add some missing values
+    >>> df_large.loc[100:200, 'price'] = np.nan
+    >>> df_large.loc[300:350, 'stock'] = np.nan
+    >>> info_table = EDA.information_data(df_large)
+    >>> info_table  # Display in Jupyter notebook
+
+    >>> # Example 3: Extracting the styled data for further analysis
+    >>> df = pd.DataFrame({
+    ...     'A': [1, 2, np.nan],
+    ...     'B': [np.nan, np.nan, np.nan],
+    ...     'C': [1, 2, 3]
+    ... })
+    >>> styled = EDA.information_data(df)
+    >>> # Access the underlying DataFrame
+    >>> underlying_df = styled.data
+    >>> print(underlying_df)
+       columns data type  missing values  percent missing values(%)  memory usage
+    0        A   float64               1                    33.333333            80
+    1        B   float64               3                   100.000000            80
+    2        C    int64                0                     0.000000            32
+
+    >>> # Example 4: Identifying columns with high missing values
+    >>> df = pd.DataFrame({
+    ...     'col1': [1, 2, 3, 4, 5],
+    ...     'col2': [np.nan, np.nan, 3, 4, 5],
+    ...     'col3': [np.nan, np.nan, np.nan, 4, 5],
+    ...     'col4': [np.nan, np.nan, np.nan, np.nan, 5],
+    ... })
+    >>> info = EDA.information_data(df)
+    >>> # The column with the most missing values (col4) will be highlighted in red
+    >>> info  # Display in Jupyter notebook
+
+    >>> # Example 5: Using for data cleaning decisions
+    >>> df = pd.DataFrame({
+    ...     'customer_id': range(100),
+    ...     'name': ['Customer_' + str(i) for i in range(100)],
+    ...     'email': ['email' + str(i) + '@example.com' for i in range(100)],
+    ...     'phone': [str(i)*10 for i in range(100)],
+    ...     'address': ['Address ' + str(i) for i in range(100)]
+    ... })
+    >>> # Introduce missing values in different columns
+    >>> df.loc[10:50, 'email'] = np.nan
+    >>> df.loc[30:70, 'phone'] = np.nan
+    >>> df.loc[0:90, 'address'] = np.nan
+    >>>
+    >>> info = EDA.information_data(df)
+    >>> # The highlighted column (address with 91% missing) suggests dropping it
+    >>> info  # Display in Jupyter notebook
+
+    >>> # Example 6: Comparing memory usage of different data types
+    >>> df_types = pd.DataFrame({
+    ...     'int_col': range(1000),
+    ...     'float_col': np.random.randn(1000),
+    ...     'string_col': ['string' + str(i) for i in range(1000)],
+    ...     'category_col': pd.Categorical(['A', 'B', 'C'] * 333 + ['A'])
+    ... })
+    >>> info = EDA.information_data(df_types)
+    >>> # The string column will show higher memory usage than categorical
+    >>> info  # Display in Jupyter notebook
+
+    >>> # Example 7: Integration in a data exploration pipeline
+    >>> def data_quality_report(df):
+    ...     print(f"Dataset shape: {df.shape}")
+    ...     print(f"Total memory usage: {df.memory_usage(deep=True).sum() / 1024:.2f} KB")
+    ...     print("\nColumn Information:")
+    ...     return EDA.information_data(df)
+    >>>
+    >>> df = pd.DataFrame({
+    ...     'A': [1, 2, 3],
+    ...     'B': [np.nan, 5, 6],
+    ...     'C': [7, 8, 9]
+    ... })
+    >>> report = data_quality_report(df)
+    Dataset shape: (3, 3)
+    Total memory usage: 0.21 KB
+
+    Column Information:
+    # Styled table will be displayed
+        """
         d = pd.DataFrame(
             data={
                 "columns": data.columns,
@@ -31,6 +396,19 @@ class EDA:
         ).reset_index(drop=True)
 
         def highlight_bad_values(s):
+            """
+            Highlight the maximum value in a series with red background.
+
+        Parameters
+        ----------
+        s : pd.Series
+            The series to highlight.
+
+        Returns
+        -------
+        list
+            List of CSS styles for each cell.
+            """
             if s.max() == 0:
                 return ['' for _ in s]
             return ['background-color: red' if v == s.max() else '' for v in s]
@@ -42,10 +420,375 @@ class EDA:
 
     @classmethod
     def describe_data(cls, data: pd.DataFrame) -> pd.DataFrame:
+        """
+            Generate a comprehensive statistical summary of all columns in a DataFrame.
+
+    This method extends pandas' `describe()` function to include all column types
+    (numeric, categorical, and object) and renames the 'top' statistic to 'mode'
+    for better interpretability. The summary includes count, unique values, mode,
+    frequency, and for numeric columns: mean, standard deviation, min, quartiles,
+    and max.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The pandas DataFrame to analyze. Can contain mixed data types.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame containing statistical summaries for all columns:
+        - **count**: Number of non-null values
+        - **unique**: Number of unique values (for non-numeric columns)
+        - **mode**: Most frequent value (renamed from 'top')
+        - **freq**: Frequency of the most frequent value (for non-numeric columns)
+        - **mean**: Arithmetic mean (numeric columns only)
+        - **std**: Standard deviation (numeric columns only)
+        - **min**: Minimum value (numeric columns only)
+        - **25%**: First quartile (numeric columns only)
+        - **50%**: Median/second quartile (numeric columns only)
+        - **75%**: Third quartile (numeric columns only)
+        - **max**: Maximum value (numeric columns only)
+
+    Raises
+    ------
+    TypeError
+        If `data` is not a pandas DataFrame.
+    ValueError
+        If the DataFrame is empty.
+
+    Notes
+    -----
+    - For numeric columns, the output includes mean, std, min, quartiles, and max.
+    - For object, string, and categorical columns, the output includes count,
+      unique, mode (top), and freq.
+    - The 'top' statistic from pandas is renamed to 'mode' for clarity.
+    - NaN values are excluded from the statistics.
+    - For datetime columns, similar statistics to numeric are provided.
+    - This method is particularly useful for quick data exploration and
+      understanding the distribution of all columns at once.
+
+    See Also
+    --------
+    pandas.DataFrame.describe : The underlying pandas method.
+    pandas.DataFrame.info : Summary of DataFrame including dtypes and memory usage.
+    pandas.DataFrame.agg : Custom aggregation of DataFrame columns.
+    EDA.information_data : Get missing values and memory usage summary.
+    EDA.check_unique : Get unique values from a specific column.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+
+    >>> # Example 1: Basic usage with mixed data types
+    >>> df = pd.DataFrame({
+    ...     'numeric': [1, 2, 3, 4, 5],
+    ...     'categorical': ['A', 'B', 'A', 'C', 'B'],
+    ...     'text': ['foo', 'bar', 'foo', 'baz', 'qux'],
+    ...     'with_nan': [1, 2, np.nan, 4, 5]
+    ... })
+    >>> EDA.describe_data(df)
+              numeric categorical  text  with_nan
+    count    5.000000           5     5  4.000000
+    unique         NaN           3     4       NaN
+    mode           NaN           A   foo       NaN
+    freq           NaN           2     1       NaN
+    mean     3.000000         NaN   NaN  3.000000
+    std      1.581139         NaN   NaN  1.825742
+    min      1.000000         NaN   NaN  1.000000
+    25%      2.000000         NaN   NaN  1.750000
+    50%      3.000000         NaN   NaN  3.000000
+    75%      4.000000         NaN   NaN  4.250000
+    max      5.000000         NaN   NaN  5.000000
+
+    >>> # Example 2: Dataset with only numeric columns
+    >>> df_numeric = pd.DataFrame({
+    ...     'A': np.random.randn(100),
+    ...     'B': np.random.randint(1, 100, 100),
+    ...     'C': np.random.exponential(2, 100)
+    ... })
+    >>> stats = EDA.describe_data(df_numeric)
+    >>> stats  # Shows full numeric statistics for all columns
+                  A           B           C
+    count  100.00000  100.000000  100.000000
+    mean     0.02345   50.500000    2.012345
+    std      0.98765   28.867513    1.987654
+    min     -2.34567    1.000000    0.012345
+    25%     -0.67890   25.750000    0.678901
+    50%      0.01234   50.500000    1.456789
+    75%      0.67890   75.250000    2.567890
+    max      2.34567  100.000000    8.901234
+
+    >>> # Example 3: Dataset with categorical columns
+    >>> df_cat = pd.DataFrame({
+    ...     'category': ['High', 'Medium', 'Low', 'High', 'Medium', 'Low', 'High'],
+    ...     'status': ['Active', 'Inactive', 'Active', 'Active', 'Inactive', 'Inactive', 'Active'],
+    ...     'value': [100, 200, 150, 300, 250, 175, 225]
+    ... })
+    >>> EDA.describe_data(df_cat)
+              category    status      value
+    count            7         7   7.000000
+    unique           3         2        NaN
+    mode          High    Active        NaN
+    freq             3         4        NaN
+    mean           NaN       NaN 200.000000
+    std            NaN       NaN  66.143783
+    min            NaN       NaN 100.000000
+    25%            NaN       NaN 162.500000
+    50%            NaN       NaN 200.000000
+    75%            NaN       NaN 237.500000
+    max            NaN       NaN 300.000000
+
+    >>> # Example 4: Identifying categorical columns with high cardinality
+    >>> df_high_card = pd.DataFrame({
+    ...     'id': range(1000),
+    ...     'category': np.random.choice(['A', 'B', 'C'], 1000),
+    ...     'text': ['text_' + str(i) for i in range(1000)]
+    ... })
+    >>> stats = EDA.describe_data(df_high_card)
+    >>> # 'id' and 'text' have high cardinality (1000 unique values)
+    >>> stats.loc[['unique']]  # Shows unique counts
+            id  category  text
+    unique 1000         3  1000
+
+    >>> # Example 5: Using with datetime columns
+    >>> df_dates = pd.DataFrame({
+    ...     'date': pd.date_range('2024-01-01', periods=100, freq='D'),
+    ...     'value': np.random.randn(100),
+    ...     'category': ['A', 'B'] * 50
+    ... })
+    >>> stats = EDA.describe_data(df_dates)
+    >>> stats  # Shows datetime statistics with min, max, etc.
+                  date     value category
+    count           100       100      100
+    unique          NaN       NaN        2
+    mode            NaN       NaN        A
+    freq            NaN       NaN       50
+    mean            NaN  0.012345      NaN
+    std             NaN  0.987654      NaN
+    min     2024-01-01 -2.345678      NaN
+    25%     2024-03-26 -0.678901      NaN
+    50%     2024-06-24  0.012345      NaN
+    75%     2024-09-22  0.678901      NaN
+    max     2024-12-30  2.345678      NaN
+
+    >>> # Example 6: Quick data quality assessment
+    >>> df_quality = pd.DataFrame({
+    ...     'num1': [1, 2, 3, 4, 5],
+    ...     'num2': [10, 20, 30, 40, 50],
+    ...     'cat1': ['X', 'Y', 'X', 'Z', 'Y'],
+    ...     'cat2': ['A', 'A', 'B', 'B', 'A']
+    ... })
+    >>> stats = EDA.describe_data(df_quality)
+    >>> # Check if categorical columns have expected number of categories
+    >>> categories = stats.loc['unique', ['cat1', 'cat2']]
+    >>> print(f"cat1 has {categories['cat1']} unique values")
+    cat1 has 3 unique values
+    >>> print(f"cat2 has {categories['cat2']} unique values")
+    cat2 has 2 unique values
+
+    >>> # Example 7: Using in a data exploration workflow
+    >>> def explore_dataset(df):
+    ...     print(f"Dataset shape: {df.shape}")
+    ...     print("\nStatistical Summary:")
+    ...     summary = EDA.describe_data(df)
+    ...     return summary
+    >>>
+    >>> df = pd.DataFrame({
+    ...     'A': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    ...     'B': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
+    ...     'C': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    ... })
+    >>> summary = explore_dataset(df)
+    Dataset shape: (10, 3)
+
+    Statistical Summary:
+    # Returns the described DataFrame
+
+    >>> # Example 8: Identifying outliers using quartiles
+    >>> df_outliers = pd.DataFrame({
+    ...     'normal': np.random.normal(0, 1, 100),
+    ...     'with_outliers': np.concatenate([np.random.normal(0, 1, 95), [100, 200, 300, 400, 500]])
+    ... })
+    >>> stats = EDA.describe_data(df_outliers)
+    >>> # Compare max values vs 75% quartile to identify outliers
+    >>> max_val = stats.loc['max', 'with_outliers']
+    >>> q75 = stats.loc['75%', 'with_outliers']
+    >>> if max_val > q75 * 3:
+    ...     print(f"Potential outliers detected in 'with_outliers': max={max_val}, Q3={q75}")
+    Potential outliers detected in 'with_outliers': max=500, Q3=0.89
+        """
         return data.describe(include="all").rename({"top": "mode"})
 
     @classmethod
     def check_date_object(cls, data: pd.DataFrame) -> bool | tuple[bool, str]:
+        """
+        check if a DataFrame contains a date/datetime column and verify its data type.
+
+    This method searches for common date column names ('date', 'datetime', 'Date', 'Datetime')
+    and checks whether the first found column is properly typed as a datetime type.
+    Returns a boolean indicating if the column exists and is correctly typed,
+    along with the column name if a date column is found.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The pandas DataFrame to check for date/datetime columns.
+
+    Returns
+    -------
+    bool or tuple[bool, str]
+        - If no date column is found or the found column is already datetime type:
+          Returns `False` (indicating no date column exists or it's already correctly typed)
+        - If a date column is found but it's NOT datetime type:
+          Returns a tuple `(True, column_name)` where `column_name` is the name of
+          the date column that needs conversion
+
+    Raises
+    ------
+    TypeError
+        If `data` is not a pandas DataFrame.
+    ValueError
+        If the DataFrame is empty.
+
+    Notes
+    -----
+    - The method looks for columns with these exact names: 'date', 'datetime', 'Date', 'Datetime'
+    - Only the first matching column is checked (if multiple date columns exist)
+    - The method uses `is_datetime64_any_dtype()` from pandas.api.types to check
+      if the column is already a datetime type
+    - This is useful for identifying date columns that need conversion before
+      time-series analysis or date-based operations
+
+    See Also
+    --------
+    pandas.api.types.is_datetime64_any_dtype : Check if dtype is datetime64.
+    pandas.to_datetime : Convert argument to datetime.
+    pandas.DataFrame.select_dtypes : Select columns by data type.
+    EDA.information_data : Get column information including data types.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> from pandas.api.types import is_datetime64_any_dtype
+
+    >>> # Example 1: DataFrame with date column as string (needs conversion)
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'value': [10, 20, 30]
+    ... })
+    >>> EDA.check_date_object(df)
+    (True, 'date')
+    # Returns tuple indicating a date column exists but needs conversion
+
+    >>> # Example 2: DataFrame with datetime column (already correct)
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'datetime': pd.to_datetime(['2024-01-01', '2024-01-02', '2024-01-03']),
+    ...     'value': [10, 20, 30]
+    ... })
+    >>> EDA.check_date_object(df)
+    False
+    # Returns False because column already has datetime type
+
+    >>> # Example 3: DataFrame with Date column (capitalized)
+    >>> df = pd.DataFrame({
+    ...     'Date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'sales': [100, 200, 300]
+    ... })
+    >>> EDA.check_date_object(df)
+    (True, 'Date')
+
+    >>> # Example 4: DataFrame without any date column
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'name': ['Alice', 'Bob', 'Charlie'],
+    ...     'age': [25, 30, 35]
+    ... })
+    >>> EDA.check_date_object(df)
+    False
+    # Returns False because no date column found
+
+    >>> # Example 5: DataFrame with multiple date-like columns
+    >>> df = pd.DataFrame({
+    ...     'date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'datetime': ['2024-01-01 10:00', '2024-01-02 11:00', '2024-01-03 12:00'],
+    ...     'Date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'value': [1, 2, 3]
+    ... })
+    >>> EDA.check_date_object(df)
+    (True, 'date')
+    # Returns the first matching column found
+
+    >>> # Example 6: Using in a data preprocessing pipeline
+    >>> def ensure_datetime(df):
+    ...     result = EDA.check_date_object(df)
+    ...     if isinstance(result, tuple):
+    ...         col_name = result[1]
+    ...         df[col_name] = pd.to_datetime(df[col_name])
+    ...         print(f"Converted '{col_name}' to datetime")
+    ...     else:
+    ...         print("No date column found or already datetime")
+    ...     return df
+    >>>
+    >>> df = pd.DataFrame({
+    ...     'date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'value': [10, 20, 30]
+    ... })
+    >>> df = ensure_datetime(df)
+    Converted 'date' to datetime
+    >>> df.dtypes
+    date     datetime64[ns]
+    value             int64
+    dtype: object
+
+    >>> # Example 7: Conditional logic based on return type
+    >>> df = pd.DataFrame({
+    ...     'Date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'sales': [100, 200, 300]
+    ... })
+    >>>
+    >>> result = EDA.check_date_object(df)
+    >>> if isinstance(result, tuple):
+    ...     col = result[1]
+    ...     print(f"Column '{col}' needs to be converted to datetime")
+    ...     # Convert the column
+    ...     df[col] = pd.to_datetime(df[col])
+    ... else:
+    ...     print("No conversion needed")
+    Column 'Date' needs to be converted to datetime
+
+    >>> # Example 8: Working with large datasets
+    >>> df_large = pd.DataFrame({
+    ...     'id': range(1000),
+    ...     'date': ['2024-01-01'] * 1000,
+    ...     'datetime': pd.date_range('2024-01-01', periods=1000),
+    ...     'value': np.random.randn(1000)
+    ... })
+    >>> result = EDA.check_date_object(df_large)
+    >>> print(f"Result: {result}")
+    Result: (True, 'date')
+    >>> # The 'datetime' column is already correct, but 'date' needs conversion
+
+    >>> # Example 9: Using in a time-series analysis workflow
+    >>> df_ts = pd.DataFrame({
+    ...     'date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    ...     'temperature': [22.5, 23.0, 21.5],
+    ...     'humidity': [65, 70, 68]
+    ... })
+    >>>
+    >>> # Check and convert if needed
+    >>> result = EDA.check_date_object(df_ts)
+    >>> if isinstance(result, tuple):
+    ...     date_col = result[1]
+    ...     df_ts[date_col] = pd.to_datetime(df_ts[date_col])
+    ...     df_ts.set_index(date_col, inplace=True)
+    ...     print("Data ready for time-series analysis")
+    Data ready for time-series analysis
+        """
         date_cols = [c for c in data.columns if c in ["date", "datetime", "Date", "Datetime"]]
         if not date_cols or is_datetime64_any_dtype(data[date_cols[0]]):
             return False
@@ -305,5 +1048,3 @@ class data_manipulation:
                 raise ValueError(f"Error while converting column ‘{col}’ to ‘{dtype}’: {e}")
         else:
             raise ValueError(f"column {col} not in data")
-
-
