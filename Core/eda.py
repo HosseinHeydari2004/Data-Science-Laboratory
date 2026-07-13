@@ -797,6 +797,58 @@ class EDA:
 
     @classmethod
     def change_dtype_datetime64(cls, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Convert object-type columns containing date information to datetime64 dtype.
+
+    This method identifies columns that contain date-like objects and converts
+    them to pandas datetime64 format for better time-series operations and
+    analysis. The conversion uses coercion to handle invalid date formats
+    gracefully by converting them to NaT (Not a Time).
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame containing potential date columns with object dtype.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with date columns converted to datetime64 dtype if any
+        date-like columns were detected. If no date-like columns are found,
+        the original DataFrame is returned unchanged.
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - The method modifies the DataFrame in-place for the converted columns
+    - Invalid date strings are converted to NaT (Not a Time)
+    - The conversion only applies to columns identified as date-like objects
+      by the EDA.check_date_object() method
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'date': ['2024-01-01', '2024-01-02', 'invalid_date'],
+    ...     'value': [10, 20, 30]
+    ... })
+    >>> df['date'].dtype
+    dtype('O')
+    >>> df = EDA.change_dtype_datetime64(df)
+    >>> df['date'].dtype
+    dtype('<M8[ns]')
+    >>> df['date']
+    0   2024-01-01
+    1   2024-01-02
+    2          NaT
+    Name: date, dtype: datetime64[ns]
+
+    See Also
+    --------
+    EDA.check_date_object : Method used to identify date-like columns
+    pandas.to_datetime : Underlying conversion function used
+        """
         ch, data_col = EDA.check_date_object(data=data)
         if ch:
             data[data_col] = pd.to_datetime(data[data_col], errors="coerce")
@@ -804,6 +856,65 @@ class EDA:
 
     @classmethod
     def get_duplicate(cls, data: pd.DataFrame) -> int | bool:
+        """
+            Check for and count duplicate rows in a DataFrame.
+
+    This method identifies duplicate rows in the input DataFrame and returns
+    the total count of duplicate entries. If no duplicates exist, it returns
+    False to indicate the absence of duplicates in a boolean context.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame to check for duplicate rows.
+
+    Returns
+    -------
+    int | bool
+        - Returns an integer representing the total number of duplicate rows
+          if duplicates are found (count > 0)
+        - Returns False if no duplicate rows exist in the DataFrame
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - The method counts all duplicate rows, not just unique duplicate entries
+    - Duplicates are identified based on all columns in the DataFrame
+    - Returns False instead of 0 to allow for boolean conditional checks like
+      `if cls.get_duplicate(df):` while still providing the count value
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with duplicates
+    >>> df_with_dups = pd.DataFrame({
+    ...     'id': [1, 2, 2, 3, 3, 3],
+    ...     'name': ['A', 'B', 'B', 'C', 'C', 'C']
+    ... })
+    >>> EDA.get_duplicate(df_with_dups)
+    3  # Returns count of duplicate rows (rows 2, 4, 5)
+    >>>
+    >>> # DataFrame without duplicates
+    >>> df_clean = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'name': ['A', 'B', 'C']
+    ... })
+    >>> EDA.get_duplicate(df_clean)
+    False
+    >>>
+    >>> # Using in conditional logic
+    >>> dup_count = EDA.get_duplicate(df)
+    >>> if dup_count:
+    ...     print(f"Found {dup_count} duplicate rows")
+    ... else:
+    ...     print("No duplicates found")
+
+    See Also
+    --------
+    pandas.DataFrame.duplicated : Underlying method used to identify duplicates
+    pandas.DataFrame.drop_duplicates : Method to remove duplicate rows
+        """
         if data.duplicated().sum() > 0:
             return data.duplicated().sum()
         else:
@@ -811,35 +922,535 @@ class EDA:
 
     @classmethod
     def show_duplicate_values(cls, data: pd.DataFrame) -> pd.Series | pd.DataFrame:
+        """
+        Extract and display all duplicate rows from a DataFrame.
+
+    This method returns a subset of the DataFrame containing only the rows
+    that are duplicates of previous rows. All duplicate occurrences (except
+    the first occurrence of each duplicate group) are returned.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame to extract duplicate rows from.
+
+    Returns
+    -------
+    pd.Series | pd.DataFrame
+        - Returns a DataFrame containing all duplicate rows if duplicates exist
+        - Returns an empty DataFrame with the same columns if no duplicates found
+        - Note: Return type is always pd.DataFrame (the type hint shows
+          pd.Series | pd.DataFrame for compatibility, but pandas.duplicated()
+          always returns a DataFrame when used for boolean indexing)
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Only returns rows that are duplicates of previous rows (first occurrence excluded)
+    - Uses pandas.duplicated() with default parameters (keep='first')
+    - If you want all occurrences including the first, use keep=False
+    - The method does not modify the original DataFrame
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with duplicates
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 2, 3, 3, 3, 4],
+    ...     'name': ['A', 'B', 'B', 'C', 'C', 'C', 'D']
+    ... })
+    >>>
+    >>> # Show duplicate rows
+    >>> YourClass.show_duplicate_values(df)
+       id name
+    1   2    B
+    3   3    C
+    4   3    C
+    5   3    C
+    >>>
+    >>> # Check if duplicates exist
+    >>> dup_df = YourClass.show_duplicate_values(df)
+    >>> if not dup_df.empty:
+    ...     print(f"Found {len(dup_df)} duplicate rows")
+    ...     print(dup_df)
+
+    See Also
+    --------
+    pandas.DataFrame.duplicated : Underlying method for duplicate detection
+    pandas.DataFrame.drop_duplicates : Method to remove duplicate rows
+    get_duplicate : Returns count of duplicate rows or False
+        """
         return data[data.duplicated()]
 
     @classmethod
     def delete_duplicate_values(cls, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Remove all duplicate rows from a DataFrame.
+
+    This method removes duplicate rows from the input DataFrame, keeping only
+    the first occurrence of each unique row. The original DataFrame is not
+    modified; a new DataFrame with duplicates removed is returned.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame from which to remove duplicate rows.
+
+    Returns
+    -------
+    pd.DataFrame
+        A new DataFrame with duplicate rows removed. The first occurrence
+        of each duplicate group is kept, and all subsequent duplicates
+        are dropped.
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.drop_duplicates() with default parameters (keep='first')
+    - Does not modify the original DataFrame (returns a new DataFrame)
+    - Considers all columns when identifying duplicates
+    - If you want to keep the last occurrence instead, use keep='last'
+    - If you want to drop all duplicates (including first), use keep=False
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with duplicates
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 2, 3, 3, 3, 4],
+    ...     'name': ['A', 'B', 'B', 'C', 'C', 'C', 'D']
+    ... })
+    >>> df
+       id name
+    0   1    A
+    1   2    B
+    2   2    B
+    3   3    C
+    4   3    C
+    5   3    C
+    6   4    D
+    >>>
+    >>> # Remove duplicates
+    >>> EDA.delete_duplicate_values(df)
+       id name
+    0   1    A
+    1   2    B
+    3   3    C
+    6   4    D
+    >>>
+    >>> # Using in data cleaning pipeline
+    >>> clean_df = EDA.delete_duplicate_values(raw_data)
+    >>> print(f"Removed {len(raw_data) - len(clean_df)} duplicate rows")
+
+    See Also
+    --------
+    pandas.DataFrame.drop_duplicates : Underlying method used
+    get_duplicate : Count duplicate rows before deletion
+    show_duplicate_values : View duplicates before deletion
+        """
         return data.drop_duplicates()
 
     @classmethod
     def detect_numeric_type(cls, data: pd.DataFrame):
+        """
+        Identify all numeric columns in a DataFrame.
+
+    This method detects and returns a list of column names that contain
+    numeric data types (int, float, complex, etc.) from the input DataFrame.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame to scan for numeric columns.
+
+    Returns
+    -------
+    list[str]
+        A list of column names that have numeric data types.
+        Returns an empty list if no numeric columns are found.
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.select_dtypes() with include="number" to detect numeric types
+    - Includes integer, float, and complex number types
+    - Does not include boolean or datetime types (use include="bool" or include="datetime" for those)
+    - Returns column names as a list for easy iteration and filtering
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with mixed types
+    >>> df = pd.DataFrame({
+    ...     'age': [25, 30, 35],           # int
+    ...     'salary': [50000.0, 60000.5, 70000.0],  # float
+    ...     'name': ['Alice', 'Bob', 'Charlie'],    # object/string
+    ...     'active': [True, False, True],           # bool
+    ...     'date': pd.to_datetime(['2024-01-01', '2024-01-02', '2024-01-03'])  # datetime
+    ... })
+    >>>
+    >>> # Detect numeric columns
+    >>> EDA.detect_numeric_type(df)
+    ['age', 'salary']
+    >>>
+    >>> # Using in data processing
+    >>> numeric_cols = EDA.detect_numeric_type(df)
+    >>> df_numeric = df[numeric_cols]  # Select only numeric columns
+    >>> print(f"Found {len(numeric_cols)} numeric columns: {numeric_cols}")
+    Found 2 numeric columns: ['age', 'salary']
+
+    See Also
+    --------
+    pandas.DataFrame.select_dtypes : Underlying method used for type detection
+    detect_object_type : Detect object/string columns
+    detect_datetime_type : Detect datetime columns
+    detect_categorical_type : Detect categorical columns
+        """
         numeric = data.select_dtypes(include="number").columns.to_list()
         return numeric
 
     @classmethod
     def detect_object_type(cls, data: pd.DataFrame):
+        """
+        Identify all object/string columns in a DataFrame.
+
+    This method detects and returns a list of column names that contain
+    object data types (typically strings, mixed types, or text data)
+    from the input DataFrame.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame to scan for object-type columns.
+
+    Returns
+    -------
+    list[str]
+        A list of column names that have object data type.
+        Returns an empty list if no object columns are found.
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.select_dtypes() with include="object" to detect object types
+    - Object dtype typically contains string/text data or mixed types
+    - These columns may contain categorical data that could be converted
+    - Object columns are often candidates for string processing or encoding
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with mixed types
+    >>> df = pd.DataFrame({
+    ...     'name': ['Alice', 'Bob', 'Charlie'],    # object/string
+    ...     'city': ['NYC', 'LA', 'Chicago'],        # object/string
+    ...     'age': [25, 30, 35],                     # int
+    ...     'salary': [50000.0, 60000.5, 70000.0],   # float
+    ...     'active': [True, False, True]            # bool
+    ... })
+    >>>
+    >>> # Detect object columns
+    >>> EDA.detect_object_type(df)
+    ['name', 'city']
+    >>>
+    >>> # Using in data processing
+    >>> object_cols = cls.detect_object_type(df)
+    >>> print(f"Found {len(object_cols)} object columns: {object_cols}")
+    Found 2 object columns: ['name', 'city']
+    >>>
+    >>> # Convert object columns to categorical for memory efficiency
+    >>> for col in object_cols:
+    ...     df[col] = df[col].astype('category')
+
+    See Also
+    --------
+    pandas.DataFrame.select_dtypes : Underlying method used for type detection
+    detect_numeric_type : Detect numeric columns
+    detect_datetime_type : Detect datetime columns
+    detect_categorical_type : Detect categorical columns
+        """
         return data.select_dtypes(include="object").columns.to_list()
 
     @classmethod
     def detect_time_type(cls, data: pd.DataFrame):
+        """
+        Identify all datetime columns in a DataFrame.
+
+    This method detects and returns a list of column names that contain
+    datetime data types (datetime64, datetime, timestamp, etc.) from
+    the input DataFrame.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame to scan for datetime-type columns.
+
+    Returns
+    -------
+    list[str]
+        A list of column names that have datetime data types.
+        Returns an empty list if no datetime columns are found.
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.select_dtypes() with include="datetime" to detect datetime types
+    - Detects both datetime64[ns] and datetime64[ns, tz] (timezone-aware) types
+    - Does not detect date-only types (use include="date" for those)
+    - Datetime columns are useful for time-series analysis, resampling, and date operations
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with mixed types
+    >>> df = pd.DataFrame({
+    ...     'timestamp': pd.to_datetime(['2024-01-01', '2024-01-02', '2024-01-03']),
+    ...     'date': pd.to_datetime(['2024-01-01', '2024-01-02', '2024-01-03']).dt.date,
+    ...     'time': pd.to_datetime(['12:00', '13:00', '14:00']).dt.time,
+    ...     'age': [25, 30, 35],                     # int
+    ...     'name': ['Alice', 'Bob', 'Charlie']       # object
+    ... })
+    >>>
+    >>> # Detect datetime columns
+    >>> EDA.detect_time_type(df)
+    ['timestamp']
+    >>>
+    >>> # Using in data processing
+    >>> time_cols = cls.detect_time_type(df)
+    >>> print(f"Found {len(time_cols)} datetime columns: {time_cols}")
+    Found 1 datetime columns: ['timestamp']
+    >>>
+    >>> # Extract date features from datetime columns
+    >>> for col in time_cols:
+    ...     df[f'{col}_year'] = df[col].dt.year
+    ...     df[f'{col}_month'] = df[col].dt.month
+    ...     df[f'{col}_day'] = df[col].dt.day
+
+    See Also
+    --------
+    pandas.DataFrame.select_dtypes : Underlying method used for type detection
+    detect_numeric_type : Detect numeric columns
+    detect_object_type : Detect object/string columns
+    detect_timedelta_type : Detect timedelta columns
+    detect_date_type : Detect date-only columns
+    change_dtype_datetime64 : Convert object columns to datetime64
+        """
         return data.select_dtypes(include=["datetime"]).columns.to_list()
 
     @classmethod
     def all_correlation(cls, data: pd.DataFrame):
+        """
+            Compute the correlation matrix for all numeric columns in a DataFrame.
+
+    This method calculates the pairwise correlation coefficients between
+    all numeric columns in the input DataFrame using Pearson correlation
+    by default.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame containing numeric columns to compute
+        correlations for.
+
+    Returns
+    -------
+    pd.DataFrame
+        A correlation matrix DataFrame where:
+        - Rows and columns represent the numeric column names
+        - Values are correlation coefficients ranging from -1 to 1
+        - Diagonal values are 1.0 (perfect correlation with itself)
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.DataFrame.corr() with numeric_only=True
+    - Only includes numeric columns; non-numeric columns are ignored
+    - Correlation coefficient:
+        - +1: Perfect positive correlation
+        - 0: No correlation
+        - -1: Perfect negative correlation
+    - Useful for feature selection, multicollinearity detection, and EDA
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with numeric columns
+    >>> df = pd.DataFrame({
+    ...     'age': [25, 30, 35, 40, 45],
+    ...     'salary': [50000, 60000, 70000, 80000, 90000],
+    ...     'experience': [1, 5, 8, 12, 15],
+    ...     'score': [85, 88, 92, 95, 98]
+    ... })
+    >>>
+    >>> # Compute correlation matrix
+    >>> EDA.all_correlation(df)
+                  age    salary  experience     score
+    age         1.0000  1.0000     0.9939    0.9897
+    salary      1.0000  1.0000     0.9939    0.9897
+    experience  0.9939  0.9939     1.0000    0.9830
+    score       0.9897  0.9897     0.9830    1.0000
+    >>>
+    >>> # Using for feature selection
+    >>> corr_matrix = EDA.all_correlation(df)
+    >>> # Find highly correlated features (above 0.9)
+    >>> high_corr = corr_matrix[corr_matrix > 0.9]
+    >>> print(high_corr)
+
+    See Also
+    --------
+    pandas.DataFrame.corr : Underlying method used
+    detect_numeric_type : Get numeric columns for correlation
+    plot_correlation_heatmap : Visualize correlation matrix (if exists)
+        """
         return data.corr(numeric_only=True)
 
     @classmethod
     def col_correlation(cls, data: pd.Series, col1: pd.Series, col2: pd.Series):
+        """
+        Compute the correlation between two specific columns in a DataFrame.
+
+    This method calculates the Pearson correlation coefficient between
+    two specified columns from the input DataFrame.
+
+    Parameters
+    ----------
+    data : pd.Series
+        The input DataFrame containing the columns to correlate.
+        Note: The type hint indicates pd.Series but this should be a DataFrame.
+    col1 : pd.Series
+        The first column (should be a column name or Series).
+        Note: The type hint indicates pd.Series but this should be a column name.
+    col2 : pd.Series
+        The second column (should be a column name or Series).
+        Note: The type hint indicates pd.Series but this should be a column name.
+
+    Returns
+    -------
+    float
+        The Pearson correlation coefficient between the two columns,
+        ranging from -1 to 1.
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.Series.corr() to compute Pearson correlation
+    - Returns NaN if either column has insufficient data or is non-numeric
+    - Missing values are automatically excluded from the calculation
+    - Both columns must be numeric or convertible to numeric
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with numeric columns
+    >>> df = pd.DataFrame({
+    ...     'age': [25, 30, 35, 40, 45],
+    ...     'salary': [50000, 60000, 70000, 80000, 90000],
+    ...     'experience': [1, 5, 8, 12, 15]
+    ... })
+    >>>
+    >>> # Correlation between age and salary
+    >>> EDA.col_correlation(df, 'age', 'salary')
+    1.0
+    >>>
+    >>> # Correlation between experience and salary
+    >>> EDA.col_correlation(df, 'experience', 'salary')
+    0.9938837346736188
+    >>>
+    >>> # Using in analysis
+    >>> corr_value = EDA.col_correlation(df, 'age', 'salary')
+    >>> print(f"Correlation between age and salary: {corr_value:.2f}")
+    Correlation between age and salary: 1.00
+    >>>
+    >>> # Check for strong correlation
+    >>> if abs(corr_value) > 0.8:
+    ...     print("Strong correlation detected!")
+
+    See Also
+    --------
+    pandas.Series.corr : Underlying method for correlation
+    all_correlation : Compute correlation matrix for all columns
+    pandas.DataFrame.corrwith : Compute correlations with a Series
+        """
         return data[col1].corr(other=data[col2])
 
     @classmethod
-    def delete_columns(cls, data: pd.DataFrame, col: str | list) -> pd.DataFrame | pd.Series:
+    def delete_columns(
+            cls, data: pd.DataFrame, col: str | list) -> pd.DataFrame | pd.Series:
+        """
+        Delete one or more columns from a DataFrame.
+
+    This method removes specified columns from the input DataFrame and
+    returns a new DataFrame without those columns. The original DataFrame
+    is not modified.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input DataFrame from which to delete columns.
+    col : str | list
+        A single column name (str) or a list of column names (list[str])
+        to be removed from the DataFrame.
+
+    Returns
+    -------
+    pd.DataFrame | pd.Series
+        - Returns a DataFrame with the specified columns removed
+        - If only one column remains after deletion, returns a Series
+        - If all columns are deleted, returns an empty DataFrame
+
+    Notes
+    -----
+    - This is a classmethod intended to be called on the class itself
+    - Uses pandas.DataFrame.drop() with axis=1 (columns)
+    - Does not modify the original DataFrame (returns a new DataFrame)
+    - Raises KeyError if specified column(s) do not exist
+    - Use inplace=True to modify the original DataFrame if needed
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>>
+    >>> # DataFrame with multiple columns
+    >>> df = pd.DataFrame({
+    ...     'id': [1, 2, 3],
+    ...     'name': ['Alice', 'Bob', 'Charlie'],
+    ...     'age': [25, 30, 35],
+    ...     'salary': [50000, 60000, 70000],
+    ...     'department': ['HR', 'IT', 'Finance']
+    ... })
+    >>>
+    >>> # Delete a single column
+    >>> YourClass.delete_columns(df, 'salary')
+       id     name  age department
+    0   1    Alice   25         HR
+    1   2      Bob   30         IT
+    2   3  Charlie   35    Finance
+    >>>
+    >>> # Delete multiple columns
+    >>> YourClass.delete_columns(df, ['age', 'department'])
+       id     name  salary
+    0   1    Alice   50000
+    1   2      Bob   60000
+    2   3  Charlie   70000
+    >>>
+    >>> # Using in data cleaning pipeline
+    >>> columns_to_remove = ['id', 'department']
+    >>> clean_df = cls.delete_columns(df, columns_to_remove)
+    >>> print(f"Removed {len(columns_to_remove)} columns")
+
+    See Also
+    --------
+    pandas.DataFrame.drop : Underlying method used
+    select_columns : Keep only specified columns (if exists)
+    rename_columns : Rename columns (if exists)
+        """
         return data.drop(columns=col)
 
     @classmethod
