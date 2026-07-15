@@ -1455,22 +1455,368 @@ class EDA:
 
     @classmethod
     def show_first_5_row(cls, data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Display and return the first 5 rows of a pandas DataFrame.
+
+    This method provides a convenient way to preview the beginning of a dataset,
+    which is useful for quick data inspection, understanding column structures,
+    and verifying data loading. It returns the first 5 rows while preserving
+    the original DataFrame's structure and data types.
+
+    Parameters
+    ----------
+    cls : class
+        The class object (automatically passed when called as a class method).
+    data : pd.DataFrame
+        The pandas DataFrame whose first 5 rows are to be retrieved.
+
+    Returns
+    -------
+    pd.DataFrame
+        A new DataFrame containing the first 5 rows of the input data.
+        If the input DataFrame has fewer than 5 rows, returns all rows.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'A': [1, 2, 3, 4, 5, 6], 'B': ['a', 'b', 'c', 'd', 'e', 'f']})
+    >>> EDA.show_first_5_row(df)
+       A  B
+    0  1  a
+    1  2  b
+    2  3  c
+    3  4  d
+    4  5  e
+
+    See Also
+    --------
+    pandas.DataFrame.head : Equivalent pandas method with configurable row count.
+    pandas.DataFrame.tail : For viewing last rows of a DataFrame.
+    pandas.DataFrame.sample : For viewing random rows of a DataFrame.
+
+    Notes
+    -----
+    - This method does not modify the original DataFrame.
+    - The returned DataFrame is a new object, not a view of the original.
+    - Performance is O(n) where n is the number of rows returned (max 5).
+        """
         return data.head(5)
 
     @classmethod
     def show_last_5_row(cls, data: pd.DataFrame) -> pd.DataFrame:
+        """
+            Display and return the last 5 rows of a pandas DataFrame.
+
+    This method provides a convenient way to preview the end of a dataset,
+    which is useful for checking the most recent entries, identifying data
+    completeness issues at the end of a dataset, and verifying data collection
+    or import completion status. It returns the last 5 rows while preserving
+    the original DataFrame's structure and data types.
+
+    Parameters
+    ----------
+    cls : class
+        The class object (automatically passed when called as a class method).
+    data : pd.DataFrame
+        The pandas DataFrame whose last 5 rows are to be retrieved.
+
+    Returns
+    -------
+    pd.DataFrame
+        A new DataFrame containing the last 5 rows of the input data.
+        If the input DataFrame has fewer than 5 rows, returns all rows.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'A': [1, 2, 3, 4, 5, 6, 7, 8],
+    ...                    'B': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']})
+    >>> EDA.show_last_5_row(df)
+       A  B
+    3  4  d
+    4  5  e
+    5  6  f
+    6  7  g
+    7  8  h
+
+    See Also
+    --------
+    pandas.DataFrame.tail : Equivalent pandas method with configurable row count.
+    pandas.DataFrame.head : For viewing first rows of a DataFrame.
+    pandas.DataFrame.sample : For viewing random rows of a DataFrame.
+
+    Notes
+    -----
+    - This method does not modify the original DataFrame.
+    - The returned DataFrame is a new object, not a view of the original.
+    - Performance is O(n) where n is the number of rows returned (max 5).
+    - Particularly useful when working with time-series data where the most
+      recent records are of interest.
+        """
         return data.tail(5)
 
     @classmethod
-    def show_specific_row(cls, data: pd.DataFrame, index: int = 0) -> pd.DataFrame | pd.Series:
+    def show_specific_row(
+            cls, data: pd.DataFrame, index: int = 0
+    ) -> pd.DataFrame | pd.Series:
+        """
+            Retrieve and return a specific row from a pandas DataFrame by its integer position.
+
+    This method allows for targeted inspection of individual records within a dataset
+    using positional indexing. It is particularly useful for examining specific data
+    points, debugging outliers, verifying data quality at certain positions, or
+    sampling individual records for manual review.
+
+    Parameters
+    ----------
+    cls : class
+        The class object (automatically passed when called as a class method).
+    data : pd.DataFrame
+        The pandas DataFrame from which to retrieve the row.
+    index : int, default=0
+        The integer position of the row to retrieve. Must be a valid index within
+        the range [0, len(data) - 1]. Negative indexing is not supported.
+
+    Returns
+    -------
+    pd.DataFrame or pd.Series
+        - If the input DataFrame has a single row, returns a pd.Series representing
+          that row with column names as the index.
+        - If the input DataFrame has multiple rows and a single row is selected,
+          returns a pd.Series (if squeezable) or a single-row pd.DataFrame
+          depending on pandas behavior.
+        - Note: The return type may vary based on the DataFrame structure and
+          pandas version. For consistent behavior, consider using `.iloc[[index]]`
+          to always get a DataFrame.
+
+    Raises
+    ------
+    IndexError
+        If the provided index is out of bounds for the DataFrame.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'A': [10, 20, 30, 40],
+    ...                    'B': ['x', 'y', 'z', 'w']})
+    >>> EDA.show_specific_row(df, index=2)
+    A    30
+    B     z
+    Name: 2, dtype: object
+
+    >>> # Using default index (first row)
+    >>> EDA.show_specific_row(df)
+    A    10
+    B     x
+    Name: 0, dtype: object
+
+    See Also
+    --------
+    pandas.DataFrame.iloc : Primary pandas method for integer position-based indexing.
+    pandas.DataFrame.loc : For label-based indexing by index labels.
+    pandas.DataFrame.iat : For fast single-value access by integer position.
+    show_first_5_row : For previewing the beginning of a dataset.
+    show_last_5_row : For previewing the end of a dataset.
+
+    Notes
+    -----
+    - This method does not modify the original DataFrame.
+    - Uses zero-based indexing (first row is at position 0).
+    - Unlike `.head()` and `.tail()`, this method returns a single row rather
+      than a multi-row DataFrame.
+    - For retrieving multiple specific rows, consider using `.iloc[[idx1, idx2]]`.
+    - Performance is O(1) as it uses direct integer indexing.
+
+    Warning
+    -------
+    Be cautious when using this method on large DataFrames with non-sequential
+    indices, as the integer position may not correspond to the actual index label.
+    Use `.loc[]` if you need to access by label instead.
+        """
         return data.iloc[index]
 
     @classmethod
-    def show_random_sample_rows(cls, data: pd.DataFrame, n: int = 5) -> pd.DataFrame | pd.Series:
+    def show_random_sample_rows(
+            cls, data: pd.DataFrame, n: int = 5
+    ) -> pd.DataFrame | pd.Series:
+        """
+            Retrieve and return a random sample of rows from a pandas DataFrame.
+
+    This method provides a way to randomly sample records from a dataset,
+    which is useful for exploratory data analysis, creating representative
+    subsets for testing, performing statistical inference, validating model
+    assumptions, or quickly inspecting the diversity of data without reviewing
+    the entire dataset. Random sampling helps ensure that the inspected rows
+    are representative of the overall data distribution.
+
+    Parameters
+    ----------
+    cls : class
+        The class object (automatically passed when called as a class method).
+    data : pd.DataFrame
+        The pandas DataFrame from which to sample rows.
+    n : int, default=5
+        The number of rows to randomly sample from the DataFrame.
+        Must be a positive integer. If n exceeds the total number of rows
+        in the DataFrame, all rows will be returned (sampled without replacement).
+
+    Returns
+    -------
+    pd.DataFrame or pd.Series
+        - If sampling a single row (n=1) from a DataFrame with multiple columns,
+          returns a pd.Series representing that row.
+        - If sampling multiple rows (n>1), returns a pd.DataFrame containing
+          the sampled rows.
+        - If the input DataFrame has a single column, the return type may be
+          a Series regardless of n value.
+        - For consistent DataFrame return, consider using `.sample(n=n)` directly
+          or ensuring n>1.
+
+    Raises
+    ------
+    ValueError
+        If n is not a positive integer or if the DataFrame is empty.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'A': range(1, 101),
+    ...                    'B': ['item_' + str(i) for i in range(1, 101)]})
+    >>> EDA.show_random_sample_rows(df, n=3)
+         A        B
+    45  46  item_46
+    12  13  item_13
+    78  79  item_79
+
+    >>> # Default sample size (5 rows)
+    >>> EDA.show_random_sample_rows(df)
+         A        B
+    23  24  item_24
+    67  68  item_68
+    5    6   item_6
+    91  92  item_92
+    34  35  item_35
+
+    >>> # Single row sample (returns Series)
+    >>> EDA.show_random_sample_rows(df, n=1)
+    A    42
+    B    item_42
+    Name: 41, dtype: object
+
+    See Also
+    --------
+    pandas.DataFrame.sample : Primary pandas method for random sampling with
+                              additional parameters like frac, replace, and random_state.
+    show_first_5_row : For previewing the beginning of a dataset.
+    show_last_5_row : For previewing the end of a dataset.
+    show_specific_row : For retrieving a specific row by position.
+
+    Notes
+    -----
+    - This method does not modify the original DataFrame.
+    - Sampling is performed without replacement by default, meaning each row
+      can be selected at most once.
+    - The order of sampled rows is random and not guaranteed to be sorted.
+    - Each call to this method will likely return different results unless
+      a random seed is set using `np.random.seed()` or `random_state`.
+    - Performance is O(n) where n is the number of rows sampled.
+    - For reproducible results, consider using `data.sample(n=n, random_state=42)`
+      directly instead of this method.
+
+    Warning
+    -------
+    Random sampling is stochastic by nature. Results will vary between executions
+    unless a fixed random seed is set. This method does not provide a `random_state`
+    parameter for reproducibility, so it should not be used in production
+    environments where consistent results are required.
+        """
         return data.sample(n=n)
 
     @classmethod
     def show_specific_column(cls, data: pd.DataFrame, col_name: str) -> pd.Series:
+        """
+            Retrieve and return a specific column from a pandas DataFrame as a Series.
+
+    This method provides direct access to individual columns within a dataset,
+    which is useful for examining specific variables, performing column-wise
+    analyses, calculating descriptive statistics, identifying data quality
+    issues in particular fields, or preparing data for visualization and
+    further processing. It returns the column as a pandas Series while
+    preserving the original data types and index.
+
+    Parameters
+    ----------
+    cls : class
+        The class object (automatically passed when called as a class method).
+    data : pd.DataFrame
+        The pandas DataFrame from which to extract the column.
+    col_name : str
+        The name of the column to retrieve. Must exactly match a column name
+        in the DataFrame (case-sensitive).
+
+    Returns
+    -------
+    pd.Series
+        A pandas Series containing the data from the specified column.
+        The Series index corresponds to the DataFrame's index, and the
+        Series name is set to the column name.
+
+    Raises
+    ------
+    KeyError
+        If the specified column name does not exist in the DataFrame.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'Name': ['Alice', 'Bob', 'Charlie'],
+    ...                    'Age': [25, 30, 35],
+    ...                    'Salary': [50000, 60000, 70000]})
+    >>> EDA.show_specific_column(df, 'Age')
+    0    25
+    1    30
+    2    35
+    Name: Age, dtype: int64
+
+    >>> # Accessing a string column
+    >>> EDA.show_specific_column(df, 'Name')
+    0      Alice
+    1        Bob
+    2    Charlie
+    Name: Name, dtype: object
+
+    See Also
+    --------
+    pandas.DataFrame.__getitem__ : Primary pandas method for column access using
+                                   bracket notation.
+    pandas.DataFrame.loc : For label-based indexing including specific columns.
+    pandas.DataFrame.iloc : For integer position-based indexing including columns.
+    pandas.DataFrame.filter : For selecting columns by name patterns.
+    show_first_5_row : For previewing the beginning of a dataset.
+    show_specific_row : For retrieving a specific row.
+
+    Notes
+    -----
+    - This method does not modify the original DataFrame.
+    - The returned Series is a view of the original DataFrame's column.
+      Modifications to the returned Series may affect the original DataFrame
+      (use `.copy()` if you need an independent copy).
+    - Accessing a column via bracket notation (`data[col_name]`) is the most
+      common and efficient way to retrieve a single column.
+    - For selecting multiple columns, use `data[['col1', 'col2']]` which
+      returns a DataFrame.
+    - Performance is O(1) as it uses direct column access.
+
+    Warning
+    -------
+    - Column names are case-sensitive. 'age' and 'Age' are treated as
+      different columns.
+    - If the column name contains spaces or special characters, ensure
+      the string is properly formatted and escaped.
+    - Using bracket notation with a single string (`data[col_name]`) will
+      raise a KeyError if the column doesn't exist. Consider using
+      `.get(col_name, default)` if you need to handle missing columns gracefully.
+        """
         return data[col_name]
 
     @classmethod
@@ -1494,6 +1840,162 @@ class EDA:
             value: Any = None,
             query: str = ""
     ) -> Any:
+        """
+            Flexible data selection method supporting multiple extraction modes from a pandas DataFrame.
+
+    This versatile method provides a unified interface for various data selection operations
+    including slicing rows and columns, filtering by values, searching text, and executing
+    complex queries. It consolidates multiple pandas indexing and filtering techniques into
+    a single function with mode-based selection, making it particularly useful for interactive
+    data exploration, GUI applications, or scenarios where selection criteria are dynamically
+    determined at runtime.
+
+    Parameters
+    ----------
+    cls : class
+        The class object (automatically passed when called as a class method).
+    data : pd.DataFrame
+        The pandas DataFrame from which to select data.
+    rows : tuple[int, int], default=(0, 5)
+        A tuple specifying the start and end row indices for row-based selection
+        (exclusive of the end index). Used in "Multiple rows and columns" and
+        "Multiple rows and one column" modes.
+    columns : Optional[tuple[int, int]], default=None
+        A tuple specifying the start and end column indices for column-based selection
+        (exclusive of the end index). Used in "Multiple rows and columns" and
+        "one row and Multiple columns" modes. If None, selects all columns.
+    mode : str, default="Multiple rows and columns"
+        The selection mode determining how data is extracted. Valid values:
+        - "Multiple rows and columns": Select a range of rows and columns
+        - "Multiple rows and one column": Select a range of rows from a single column
+        - "one row and Multiple columns": Select a single row and range of columns
+        - "filter by value": Filter rows where a column equals a specific value
+        - "search text": Filter rows containing text in a column (case-insensitive)
+        - "query": Execute a pandas query expression
+    column_name : Optional[str] | object, default=None
+        The column name to use in "Multiple rows and one column", "filter by value",
+        and "search text" modes. For "Multiple rows and one column" mode, can also
+        be an integer index if no column name is provided.
+    row_index : Optional[int], default=None
+        The integer position of the single row to select in "one row and Multiple columns"
+        mode. Must be a valid index within the DataFrame.
+    value : Any, default=None
+        The value to filter or search for in "filter by value" and "search text" modes.
+        In "search text" mode, this is automatically converted to a string.
+    query : str, default=""
+        A pandas query expression string for the "query" mode. Uses pandas.query()
+        syntax with column names and boolean expressions.
+
+    Returns
+    -------
+    Any
+        The return type varies based on the mode:
+        - "Multiple rows and columns": Returns pd.DataFrame (selected subset)
+        - "Multiple rows and one column": Returns pd.Series (selected column slice)
+        - "one row and Multiple columns": Returns pd.Series (selected row)
+        - "filter by value": Returns pd.DataFrame (filtered subset)
+        - "search text": Returns pd.DataFrame (filtered subset)
+        - "query": Returns pd.DataFrame (query result)
+
+    Raises
+    ------
+    KeyError
+        If column_name does not exist in the DataFrame when required.
+    IndexError
+        If row_index is out of bounds in "one row and Multiple columns" mode.
+    ValueError
+        If an invalid mode is provided or if required parameters are missing.
+    TypeError
+        If query expression is invalid or parameter types are incorrect.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+    ...     'Age': [25, 30, 35, 40, 45],
+    ...     'Department': ['HR', 'IT', 'Finance', 'IT', 'HR'],
+    ...     'Salary': [50000, 60000, 70000, 80000, 90000]
+    ... })
+
+    >>> # Select rows 1-3 and columns 0-2
+    >>> EDA.select_manual_data(df, rows=(1, 4), columns=(0, 3),
+    ...                            mode="Multiple rows and columns")
+         Name  Age Department
+    1    Bob   30         IT
+    2 Charlie   35    Finance
+    3   David   40         IT
+
+    >>> # Select rows 2-4 from 'Age' column only
+    >>> EDA.select_manual_data(df, rows=(2, 5), column_name='Age',
+    ...                            mode="Multiple rows and one column")
+    2    35
+    3    40
+    4    45
+    Name: Age, dtype: int64
+
+    >>> # Select row 3 with all columns
+    >>> EDA.select_manual_data(df, row_index=3, columns=None,
+    ...                            mode="one row and Multiple columns")
+    Name         David
+    Age             40
+    Department      IT
+    Salary       80000
+    Name: 3, dtype: object
+
+    >>> # Filter employees with Age = 30
+    >>> EDA.select_manual_data(df, column_name='Age', value=30,
+    ...                            mode="filter by value")
+      Name  Age Department  Salary
+    1  Bob   30         IT   60000
+
+    >>> # Search for 'i' in Department (case-insensitive)
+    >>> EDA.select_manual_data(df, column_name='Department', value='i',
+    ...                            mode="search text")
+         Name  Age Department  Salary
+    1    Bob   30         IT   60000
+    3  David   40         IT   80000
+
+    >>> # Complex query: Age > 35 and Department == 'HR'
+    >>> EDA.select_manual_data(df, query="Age > 35 and Department == 'HR'",
+    ...                            mode="query")
+      Name  Age Department  Salary
+    4  Eve   45         HR   90000
+
+    See Also
+    --------
+    pandas.DataFrame.iloc : Primary pandas method for integer position-based indexing.
+    pandas.DataFrame.loc : For label-based indexing.
+    pandas.DataFrame.query : For executing query expressions.
+    pandas.DataFrame.filter : For filtering based on column names.
+    show_first_5_row : For previewing the beginning of a dataset.
+    show_specific_row : For retrieving a specific row.
+    show_specific_column : For retrieving a specific column.
+
+    Notes
+    -----
+    - This method does not modify the original DataFrame.
+    - Row and column slicing uses exclusive end indices (like Python range).
+    - In "Multiple rows and one column" mode, if column_name is not provided,
+      the first column (index 0) is used.
+    - "search text" mode performs case-insensitive substring search using
+      pandas str.contains().
+    - The "query" mode uses pandas.query() which supports various operators
+      including `==`, `!=`, `>`, `<`, `>=`, `<=`, `in`, `and`, `or`, `not`.
+    - Query strings can reference column names directly without quotes unless
+      they contain spaces or special characters.
+
+    Warning
+    -------
+    - The "query" mode uses `pd.eval()` internally which can execute arbitrary
+      code. Only use this with trusted query strings.
+    - In "search text" mode, all values are converted to strings for comparison.
+      This may not be appropriate for numeric columns.
+    - Column names in queries with spaces need to be wrapped in backticks:
+      e.g., query="`Column Name` > 10"
+    - For large DataFrames, "filter by value" and "search text" modes may be
+      more performant than query mode.
+        """
 
         if mode == "Multiple rows and columns":
             if columns is None:
