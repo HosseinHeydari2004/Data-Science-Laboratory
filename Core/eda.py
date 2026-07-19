@@ -6,6 +6,7 @@ from pandas import DataFrame
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.io.formats.style import Styler
 from scipy import stats
+from sklearn.ensemble import IsolationForest
 from sklearn.impute import SimpleImputer
 
 
@@ -2310,6 +2311,22 @@ class handle_outliers:
     ) -> pd.DataFrame:
         return data.drop(index=index_outliers, errors='ignore').reset_index(drop=True)
 
+    @classmethod
+    def isolation_forest(
+            cls, data: pd.DataFrame | pd.Series, contamination: float = 0.4, **kwargs
+    ) -> pd.Series | ValueError:
+        if not 0 < contamination <= 0.5:
+            raise ValueError(
+                f"contamination must be between 0 and 0.5, got {contamination}"
+            )
+        model = IsolationForest(
+            contamination=contamination,
+            random_state=42,
+            n_jobs=-1,
+            **kwargs
+        )
+        prediction = model.fit_predict(data)
+        return pd.Series(prediction == -1, index=data.index)
 
 
 class data_manipulation:
