@@ -2313,20 +2313,27 @@ class handle_outliers:
 
     @classmethod
     def isolation_forest(
-            cls, data: pd.DataFrame | pd.Series, contamination: float = 0.4, **kwargs
-    ) -> pd.Series | ValueError:
-        if not 0 < contamination <= 0.5:
-            raise ValueError(
-                f"contamination must be between 0 and 0.5, got {contamination}"
-            )
+            cls, data: pd.DataFrame | pd.Series,
+            column: pd.DataFrame | object | str,
+            contamination: float | str = "auto",
+            **kwargs
+    ) -> tuple[pd.Series | None, pd.Series] | ValueError:
+        if isinstance(contamination, float):
+            if not 0 < contamination <= 0.5:
+                raise ValueError(
+                    f"contamination must be between 0 and 0.5, got {contamination}"
+                )
+
+        x = data[[column]]
         model = IsolationForest(
             contamination=contamination,
             random_state=42,
             n_jobs=-1,
             **kwargs
         )
-        prediction = model.fit_predict(data)
-        return pd.Series(prediction == -1, index=data.index)
+        prediction = model.fit_predict(x)
+        mask = pd.Series(prediction == -1, index=data.index)
+        return data.loc[mask, [column]]
 
 
 class data_manipulation:
