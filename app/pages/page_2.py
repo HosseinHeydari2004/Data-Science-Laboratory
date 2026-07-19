@@ -368,7 +368,7 @@ if 'df' in st.session_state:
         )
         method_selectbox = st.selectbox(
             "Please select your preferred method",
-            options=["IQR", "Z_score"], key="method_selectbox"
+            options=["IQR", "Z_score", "IsolationForest"], key="method_selectbox"
         )
         if method_selectbox == "IQR":
             outlier = handle_outliers.detect_outliers(
@@ -419,6 +419,32 @@ if 'df' in st.session_state:
                     st.rerun()
             else:
                 st.info(f"In the Z_score method, there are no outliers in '{outliers_col_selectbox}'")
+
+        elif method_selectbox == "IsolationForest":
+            select_mode_contamination = st.selectbox(
+                "select mode contamination",
+                options=["manual", "auto"], index=1, key="pond2"
+            )
+            if select_mode_contamination == "manual":
+                contamination_slider = st.slider(
+                    "select outliers contamination",
+                    min_value=0.01, max_value=0.20, value=0.01, step=0.01, key="idjuw2"
+                )
+            outlier = handle_outliers.isolation_forest(
+                data=df,
+                column=outliers_col_selectbox,
+                contamination="auto" if select_mode_contamination != "manual" else contamination_slider
+            )
+
+            if len(outlier) > 0:
+                st.dataframe(
+                    outlier
+                )
+            else:
+                st.info(
+                    f"In the {str(method_selectbox)} method, there are no outliers in '{outliers_col_selectbox}'"
+                )
+
 
     with st.expander("Data manipulation"):
         select_manipulation_mode = st.selectbox(
