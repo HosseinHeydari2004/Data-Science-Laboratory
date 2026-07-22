@@ -2263,7 +2263,54 @@ class handle_MissingValue:
         return percent_missing[percent_missing > threshold].to_dict()
 
     @classmethod
-    def show_missing_values(cls, data: pd.DataFrame, reset_index: bool = False) -> pd.Series | pd.DataFrame:
+    def show_missing_values(
+            cls, data: pd.DataFrame, reset_index: bool = False
+    ) -> pd.Series | pd.DataFrame:
+        """
+        Filter and display rows containing any missing (NaN) values from a DataFrame.
+
+    This method provides a convenient way to inspect rows with missing data,
+    optionally resetting the index for cleaner presentation or further processing.
+
+    Args:
+        data (pd.DataFrame): The input DataFrame to check for missing values.
+        reset_index (bool, optional): If True, resets the index of the filtered
+            rows to a default integer sequence starting from 0. Defaults to False,
+            which preserves the original index values.
+
+    Returns:
+        pd.Series | pd.DataFrame: A subset of the original DataFrame containing
+        only rows with at least one missing value. If `reset_index` is True,
+        the returned DataFrame has a new sequential index; otherwise, the original
+        indices are retained.
+
+    Raises:
+        TypeError: If `data` is not a pandas DataFrame.
+
+    Examples:
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({
+        ...     'A': [1, 2, None, 4],
+        ...     'B': ['x', None, 'z', 'w']
+        ... })
+        >>> cls.show_missing_values(df)
+           A    B
+        0  1.0    x
+        1  2.0  NaN
+        2  NaN    z
+
+        >>> cls.show_missing_values(df, reset_index=True)
+             A    B
+        0  1.0    x
+        1  2.0  NaN
+        2  NaN    z
+
+    Note:
+        - Missing values are identified using `pd.isna()` which covers NaN, None,
+          and NaT values.
+        - The method does not modify the original DataFrame; it returns a new view.
+        - To get a boolean mask of missing rows, use `data.isna().any(axis=1)
+        """
         if reset_index:
             return data[data.isna().any(axis=1)].reset_index(drop=True)
         else:
@@ -2292,6 +2339,70 @@ class handle_outliers:
             method: str | object = "IQR",
             threshold: int = 3
     ) -> pd.DataFrame:
+        """
+            Detect outliers in a specified column using statistical methods.
+
+    This method identifies anomalous data points in a single column using either
+    the Interquartile Range (IQR) method or the Z-score method. Outliers are
+    returned as a DataFrame containing only the outlier values.
+
+    Args:
+        data (pd.DataFrame): The input DataFrame containing the data to analyze.
+        col (pd.DataFrame | str | object): The column name (str) or column reference
+            to analyze for outliers. If a DataFrame is passed, the first column
+            will be used.
+        method (str | object, optional): The outlier detection method to use.
+            Options:
+            - "IQR": Uses the Interquartile Range method with 1.5 * IQR bounds.
+            - "Z_score": Uses Z-score method where values beyond `threshold`
+              standard deviations are considered outliers.
+            Defaults to "IQR".
+        threshold (int, optional): The Z-score threshold for the Z-score method.
+            Only used when method="Z_score". Values with |Z| > threshold are
+            considered outliers. Defaults to 3.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing only the outlier values from the
+        specified column. The index preserves the original row indices of the
+        outliers.
+
+    Raises:
+        ValueError: If an unsupported method is specified or if the column
+            cannot be properly accessed from the DataFrame.
+        TypeError: If `data` is not a pandas DataFrame or `col` is not
+            a valid column identifier.
+
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> df = pd.DataFrame({
+        ...     'values': [1, 2, 3, 100, 4, 5, 200],
+        ...     'other': ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+        ... })
+
+        >>> cls.detect_outliers(df, 'values', method='IQR')
+        3    100
+        6    200
+        Name: values, dtype: int64
+
+        >>> cls.detect_outliers(df, 'values', method='Z_score', threshold=2)
+        3    100
+        6    200
+        Name: values, dtype: int64
+
+    Note:
+        - The IQR method defines outliers as values outside the range:
+          [Q1 - 1.5*IQR, Q3 + 1.5*IQR]
+        - The Z-score method assumes the data is approximately normally
+          distributed for best results.
+        - For non-numeric columns, the method will raise an error.
+        - To view the full row context, use: `data.loc[outlier_indices]` where
+          `outlier_indices` is the index of the returned DataFrame.
+
+    See Also:
+        - scipy.stats.zscore: For more information on Z-score calculation.
+        - pandas.DataFrame.quantile: For IQR calculation details.
+        """
         if method == "IQR":
             Q1 = data[col].quantile(q=0.25)
             Q3 = data[col].quantile(q=0.75)
@@ -2309,6 +2420,78 @@ class handle_outliers:
     def delete_outliers(
             cls, data: pd.DataFrame, index_outliers: Any
     ) -> pd.DataFrame:
+        """
+        Remove outlier rows from a DataFrame by their index positions.
+
+    This method drops specified rows from the DataFrame and resets the index
+    to maintain a clean sequential ordering. It safely handles cases where
+    the specified indices may not exist.
+
+    Args:
+        data (pd.DataFrame): The input DataFrame from which outliers should
+            be removed.
+        index_outliers (Any): Index or indices of rows to drop. Can be a single
+            index label, a list of labels, or any valid indexer accepted by
+            pandas.DataFrame.drop().
+
+    Returns:
+        pd.DataFrame: A new DataFrame with the specified rows removed and the
+        index reset to a default integer sequence starting from 0. The original
+        DataFrame remains unmodified.
+
+    Raises:
+        TypeError: If `data` is not a pandas DataFrame.
+
+    Examples:
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({
+        ...     'A': [1, 2, 3, 4, 5],
+        ...     'B': ['a', 'b', 'c', 'd', 'e']
+        ... })
+        >>> df
+           A  B
+        0  1  a
+        1  2  b
+        2  3  c
+        3  4  d
+        4  5  e
+
+        # Remove a single row by index
+        >>> cls.delete_outliers(df, index_outliers=2)
+           A  B
+        0  1  a
+        1  2  b
+        2  4  d
+        3  5  e
+
+        # Remove multiple rows by index
+        >>> cls.delete_outliers(df, index_outliers=[0, 2, 4])
+           A  B
+        0  2  b
+        1  4  d
+
+        # Non-existent indices are safely ignored
+        >>> cls.delete_outliers(df, index_outliers=[10, 20])
+           A  B
+        0  1  a
+        1  2  b
+        2  3  c
+        3  4  d
+        4  5  e
+
+    Note:
+        - The `errors='ignore'` parameter ensures the method doesn't fail if
+          `index_outliers` contains indices not present in the DataFrame.
+        - The method always resets the index, which is particularly useful
+          after iterative outlier removal operations.
+        - This creates a new DataFrame object; the original is not modified.
+        - To remove outliers without resetting the index, use
+          `data.drop(index=index_outliers)` directly.
+
+    See Also:
+        - pandas.DataFrame.drop: For more drop options and parameters.
+        - pandas.DataFrame.reset_index: For controlling index reset behavior.
+        """
         return data.drop(index=index_outliers, errors='ignore').reset_index(drop=True)
 
     @classmethod
@@ -2318,6 +2501,106 @@ class handle_outliers:
             contamination: float | str = "auto",
             **kwargs
     ) -> tuple[pd.Series | None, pd.Series] | ValueError:
+        """
+            Detect outliers in a dataset using the Isolation Forest algorithm.
+
+    Isolation Forest is an unsupervised anomaly detection method that isolates
+    observations by randomly selecting a feature and then randomly selecting a
+    split value between the maximum and minimum values of the selected feature.
+    Anomalies are identified as observations with shorter average path lengths
+    in the constructed decision trees.
+
+    Args:
+        data (pd.DataFrame | pd.Series): The input dataset containing the column
+            to analyze for outliers.
+        column (pd.DataFrame | object | str): The column name or reference to
+            analyze for outliers. Can be a string column name, a DataFrame with
+            a single column, or an object that can be used to index the data.
+        contamination (float | str, optional): The expected proportion of outliers
+            in the dataset. Controls the threshold for anomaly detection.
+            - If float: Must be between 0.0 and 0.5 (exclusive of 0, inclusive of 0.5).
+              Higher values make the model more sensitive to anomalies.
+            - If "auto": The contamination is estimated automatically based on
+              the data's characteristics.
+            Defaults to "auto".
+        **kwargs: Additional keyword arguments passed directly to the
+            IsolationForest constructor. Common parameters include:
+            - n_estimators (int): Number of base estimators (default: 100)
+            - max_samples (int | str): Number of samples to draw (default: "auto")
+            - max_features (int | float): Number of features to consider (default: 1)
+            - bootstrap (bool): Whether to use bootstrap sampling (default: False)
+
+    Returns:
+        tuple[pd.Series | None, pd.Series] | ValueError:
+            - On success: A tuple containing:
+              (outlier_data, outlier_mask)
+              - outlier_data (pd.Series): The detected outlier values from the
+                specified column, preserving original indices.
+              - outlier_mask (pd.Series): Boolean mask where True indicates
+                outliers, with same index as the input data.
+            - On failure: Raises ValueError with an appropriate error message.
+
+    Raises:
+        ValueError: If `contamination` is a float outside the valid range (0, 0.5].
+        TypeError: If `data` is not a pandas DataFrame or Series, or if `column`
+            cannot be properly indexed.
+
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> df = pd.DataFrame({
+        ...     'values': np.concatenate([np.random.normal(0, 1, 95),
+        ...                               np.random.normal(10, 1, 5)]),
+        ...     'other': range(100)
+        ... })
+
+        >>> outliers, mask = cls.isolation_forest(df, 'values', contamination=0.05)
+        >>> outliers.head()
+        95    9.87
+        96   10.23
+        97    9.95
+        Name: values, dtype: float64
+
+        >>> mask.head(10)
+        0    False
+        1    False
+        2    False
+        3    False
+        4    False
+        5    False
+        6    False
+        7    False
+        8    False
+        9    False
+        dtype: bool
+
+        >>> # With custom parameters
+        >>> outliers, mask = cls.isolation_forest(
+        ...     df, 'values',
+        ...     contamination=0.1,
+        ...     n_estimators=200,
+        ...     max_samples=256
+        ... )
+
+    Note:
+        - The Isolation Forest algorithm is particularly effective for high-dimensional
+          datasets and works well with both small and large sample sizes.
+        - The method uses `random_state=42` for reproducibility and `n_jobs=-1`
+          to utilize all available CPU cores.
+        - The returned mask can be used to filter the original DataFrame:
+          `df_clean = df[~mask]` or `df_outliers = df[mask]`.
+        - For multivariate outlier detection, consider using multiple columns
+          by passing a DataFrame to the `column` parameter.
+
+    See Also:
+        - sklearn.ensemble.IsolationForest: The scikit-learn implementation used.
+        - pandas.DataFrame.quantile: For IQR-based outlier detection.
+        - scipy.stats.zscore: For Z-score based outlier detection.
+
+    References:
+        - Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008). Isolation Forest.
+          Eighth IEEE International Conference on Data Mining.
+        """
         if isinstance(contamination, float):
             if not 0 < contamination <= 0.5:
                 raise ValueError(
@@ -2341,6 +2624,99 @@ class data_manipulation:
     def delete_row(
             cls, data: pd.DataFrame, row_index: int | object | pd.Series = None
     ) -> DataFrame | None | Exception:
+        """
+                Delete a specific row from a DataFrame by its index.
+
+        This method removes a single row identified by its index label and resets
+        the DataFrame index to maintain a clean sequential ordering. The operation
+        validates that the specified index exists before attempting deletion.
+
+        Args:
+            data (pd.DataFrame): The input DataFrame from which the row should
+                be removed.
+            row_index (int | object | pd.Series, optional): The index label(s) of
+                the row(s) to delete. Can be a single integer index, a label of
+                any type (e.g., string, datetime), or a pandas Series of index
+                labels. Defaults to None.
+
+        Returns:
+            DataFrame | None | Exception:
+                - On success: Returns a new DataFrame with the specified row(s)
+                  removed and the index reset to a default integer sequence
+                  starting from 0.
+                - On failure: Raises a ValueError exception.
+
+        Raises:
+            ValueError: If the specified `row_index` does not exist in the
+                DataFrame's index. The error message will indicate which index
+                was not found.
+            TypeError: If `data` is not a pandas DataFrame.
+
+        Examples:
+            >>> import pandas as pd
+            >>> df = pd.DataFrame({
+            ...     'Name': ['Alice', 'Bob', 'Charlie', 'Diana'],
+            ...     'Age': [25, 30, 35, 28],
+            ...     'City': ['NYC', 'LA', 'Chicago', 'Boston']
+            ... })
+            >>> df
+               Name  Age     City
+            0  Alice   25      NYC
+            1    Bob   30       LA
+            2  Charlie 35  Chicago
+            3   Diana  28   Boston
+
+            >>> # Delete a row by integer index
+            >>> data_manipulation.delete_row(df, row_index=1)
+               Name  Age     City
+            0  Alice   25      NYC
+            1  Charlie 35  Chicago
+            2   Diana  28   Boston
+
+            >>> # Delete a row with string index
+            >>> df_str_index = df.set_index('Name')
+            >>> data_manipulation.delete_row(df_str_index, row_index='Bob')
+                   Age     City
+            Name
+            Alice   25      NYC
+            Charlie 35  Chicago
+            Diana   28   Boston
+
+            >>> # Attempting to delete non-existent index raises ValueError
+            >>> data_manipulation.delete_row(df, row_index=10)
+            ValueError: row 10 not founded!
+
+            >>> # Without row_index, returns original DataFrame
+            >>> data_manipulation.delete_row(df)
+               Name  Age     City
+            0  Alice   25      NYC
+            1    Bob   30       LA
+            2  Charlie 35  Chicago
+            3   Diana  28   Boston
+
+        Note:
+            - This method always resets the index after deletion, which is useful
+              for maintaining consistent row numbering in subsequent operations.
+            - The original DataFrame is not modified; a new DataFrame is returned.
+            - If `row_index` is None, the method raises a ValueError. Consider
+              adding a check for None in future implementations.
+            - For deleting multiple rows, pass a list of indices:
+              `delete_row(df, row_index=[0, 2])`
+            - The method uses `errors='raise'` behavior (default) in `drop()`,
+              so invalid indices will raise an error rather than being ignored.
+
+        See Also:
+            - pandas.DataFrame.drop: The underlying method used for row deletion.
+            - pandas.DataFrame.reset_index: For controlling index reset behavior.
+            - pandas.DataFrame.loc: For selecting rows by label.
+
+        Todo:
+            - Add support for deleting multiple rows simultaneously.
+            - Consider adding an `inplace` parameter to modify the original
+              DataFrame.
+            - Add support for deleting rows by position (iloc) rather than label.
+            - Improve validation for None row_index case.
+        """
         if row_index not in data.index:
             raise ValueError(f"row {row_index} not founded!")
         return data.drop(index=row_index).reset_index(drop=True)
