@@ -18,13 +18,36 @@ from sklearn.model_selection import cross_validate
 
 
 class Evaluator:
+    """
+    Fit a pipeline and compute evaluation metrics for one of three tasks.
+
+    ``Evaluator`` is a thin, task-aware wrapper around a scikit-learn
+    ``Pipeline``. Depending on ``task_type`` it knows which metrics to
+    compute after fitting:
+
+    - ``"classification"``: Accuracy, weighted Precision/Recall/F1 and
+      ROC-AUC.
+    - ``"regression"``: R2, MAE, MSE and RMSE.
+    - ``"clustering"``: Silhouette, Calinski-Harabasz and Davies-Bouldin
+      scores plus the number of clusters found.
+
+    Parameters
+    ----------
+    pipeline : sklearn.pipeline.Pipeline
+        The (unfitted) pipeline to train and evaluate.
+    task_type : str
+        One of ``"classification"``, ``"regression"`` or ``"clustering"``
+        (case-insensitive).
+    """
 
     def __init__(self, pipeline, task_type: str):
+        """Store the pipeline to fit/evaluate and normalize ``task_type`` to lowercase."""
 
         self.pipeline = pipeline
         self.task_type = task_type.lower()
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train) -> "Evaluator":
+        """Fit ``self.pipeline`` on the training data and return ``self``."""
 
         y_train = pd.Series(y_train).squeeze()
 
@@ -36,6 +59,7 @@ class Evaluator:
         return self
 
     def predict(self, X):
+        """Return ``self.pipeline.predict(X)``."""
 
         return self.pipeline.predict(X)
 
@@ -47,6 +71,30 @@ class Evaluator:
             y_test,
             label=None
     ) -> pd.DataFrame:
+        """
+        Fit on train data, predict on test data and return metrics.
+
+        Parameters
+        ----------
+        X_train, y_train : array-like
+            Training features/target.
+        X_test, y_test : array-like
+            Held-out features/target used to compute the reported metrics.
+        label : optional
+            Unused; kept for backward/forward compatibility with callers.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A single-row DataFrame whose columns are the metrics for
+            ``self.task_type`` (see class docstring).
+
+        Raises
+        ------
+        ValueError
+            If ``self.task_type`` is not one of ``"classification"``,
+            ``"regression"`` or ``"clustering"``.
+        """
 
         y_train = pd.Series(y_train).squeeze()
         y_test = pd.Series(y_test).squeeze()
@@ -60,7 +108,15 @@ class Evaluator:
             X_test
         )
         if self.task_type == "classification":
-            y_probs = self.pipeline.predict_proba(X_test)[:, 1]
+            y_probs = self.pipeline.predict_proba(X_test)
+            # Bug fix: the previous code always used `y_probs[:, 1]`, which
+            # only makes sense for binary classification. For a target with
+            # more than 2 classes this produced the probability of an
+            # arbitrary class and made `roc_auc_score` raise
+            # `ValueError: multi_class must be in ('ovo', 'ovr')`. We now
+            # branch on the number of classes and use the appropriate
+            # scikit-learn call for each case.
+            n_classes = y_probs.shape[1]
 
         if self.task_type == "regression":
 
@@ -115,8 +171,12 @@ class Evaluator:
                     average="weighted",
                     zero_division=0
                 ),
-                "AUC Score": roc_auc_score(
-                    y_test, y_probs
+                "AUC Score": (
+                    roc_auc_score(y_test, y_probs[:, 1])
+                    if n_classes == 2
+                    else roc_auc_score(
+                        y_test, y_probs, multi_class="ovr", average="weighted"
+                    )
                 )
             }
         elif self.task_type == "clustering":
@@ -150,6 +210,32 @@ class Evaluator:
             y,
             cv: int = 5
     ) -> pd.DataFrame:
+        """
+        Run k-fold cross-validation and summarize train/test scores.
+
+        Parameters
+        ----------
+        X, y : array-like
+            Full feature matrix and target (not pre-split).
+        cv : int, default=5
+            Number of folds.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A single-row DataFrame with one column per aggregated metric
+            (``"Train <METRIC>"``, ``"CV <METRIC>"``), one column per fold
+            (``"<METRIC> Fold <n>"``) and a ``"Total CV"`` column recording
+            ``cv``. MAE/MSE are reported as positive values even though
+            scikit-learn's scorers are "neg_*" internally.
+
+        Raises
+        ------
+        ValueError
+            If ``self.task_type`` is ``"clustering"`` (cross-validation is
+            not defined for unsupervised tasks here) or any other
+            unsupported value.
+        """
         y = pd.Series(y).squeeze()
 
         if self.task_type == "regression":
@@ -248,6 +334,11 @@ class Evaluator:
             y,
             cv: int = 5
     ) -> pd.DataFrame:
+        """
+        Convenience wrapper combining :meth:`evaluate` and
+        :meth:`cross_validation` into a single row DataFrame
+        (concatenated column-wise).
+        """
         eval_df = self.evaluate(
             X_train,
             y_train,
@@ -267,6 +358,23 @@ class Evaluator:
         )
 
     def clustering_report(self, X) -> pd.DataFrame:
+        """
+        Fit-predict the clustering pipeline on ``X`` and report metrics.
+
+        Parameters
+        ----------
+        X : array-like
+            Data to cluster.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A single-row DataFrame with Silhouette / Calinski-Harabasz /
+            Davies-Bouldin scores, the fitted model's inertia (if it has
+            one, e.g. K-Means) and the number of clusters found. The three
+            quality scores are ``None`` when fewer than 2 clusters are
+            found (e.g. DBSCAN labeling everything as noise).
+        """
 
         labels = self.pipeline.fit_predict(X)
 

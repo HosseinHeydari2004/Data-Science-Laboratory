@@ -1,7 +1,7 @@
 import streamlit as st
 
 from Core.eda import handle_MissingValue, EDA, handle_outliers, data_manipulation
-from Untils.Until import save_data
+from Untils.Until import save_data, download_matplotlib_figure
 from components.charts import seaborn_chart, plotly_charts
 
 st.title("📊 Exploratory Data Analysis (EDA)")
@@ -324,7 +324,7 @@ if 'df' in st.session_state:
                     st.rerun()
 
         if EDA.check_date_object(data=df):
-            st.warning(f"⚠️The date column is object")
+            st.warning("⚠️The date column is object")
             if st.button("change to Datetime", icon="↘️", help="change data type"):
                 df = EDA.change_dtype_datetime64(data=df)
                 st.session_state['df'] = df
@@ -335,7 +335,7 @@ if 'df' in st.session_state:
         if duplicate:
             threshold_duplicate = st.slider("Select duplicate Threshold", 0, len(df), 5)
             if duplicate > threshold_duplicate:
-                st.warning(f"There are a lot of duplicate values")
+                st.warning("There are a lot of duplicate values")
             else:
                 st.warning(f"Your data contains duplicate values: {duplicate}")
             select_show_duplicate_values = st.selectbox(
@@ -386,7 +386,7 @@ if 'df' in st.session_state:
                         data=df, index_outliers=outlier.index
                     )
                     st.session_state['df'] = df
-                    st.success(f"outliers deleted", icon="✅")
+                    st.success("outliers deleted", icon="✅")
                     st.rerun()
             else:
                 st.info(
@@ -415,7 +415,7 @@ if 'df' in st.session_state:
                 if select_delete_outliers:
                     df = handle_outliers.delete_outliers(data=df, index_outliers=outlier.index)
                     st.session_state['df'] = df
-                    st.success(f"outliers deleted", icon="✅")
+                    st.success("outliers deleted", icon="✅")
                     st.rerun()
             else:
                 st.info(f"In the Z_score method, there are no outliers in '{outliers_col_selectbox}'")
@@ -494,7 +494,11 @@ if 'df' in st.session_state:
                         st.success(f"rows {(start_rows, end_rows)} deleted", icon="✅")
                         st.rerun()
                     except Exception as E:
-                        st.error(f"rows {(start_rows, end_rows)} not founded!")
+                        # Bug fix: the exception was caught but its message
+                        # was discarded, unlike the other `except` blocks on
+                        # this page — making it impossible to tell the user
+                        # (or diagnose) *why* the deletion failed.
+                        st.error(f"rows {(start_rows, end_rows)} not found: {E}")
         elif select_manipulation_mode == "delete column or columns":
             select_delete_cols = st.selectbox(
                 "select delete column or columns",
@@ -618,7 +622,7 @@ if 'df' in st.session_state:
                 )
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize")
-                st.pyplot(seaborn_chart.histogram(
+                fig = seaborn_chart.histogram(
                     data=df, x=select_columns1, y=select_columns2,
                     hue=select_hue, kde=select_kde_mode, fill=select_fill_mode,
                     figsize=(select_width, select_height), dpi=select_dpi,
@@ -626,7 +630,9 @@ if 'df' in st.session_state:
                     ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
                     xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
                     ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
-                ))
+                )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="histogram.png", key="dl_histogram")
             with st.expander("kde plot"):
                 select_columns1 = st.selectbox(
                     "please select column",
@@ -673,7 +679,7 @@ if 'df' in st.session_state:
                 )
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize2")
-                st.pyplot(seaborn_chart.kde_plot(
+                fig = seaborn_chart.kde_plot(
                     data=df, x=select_columns1, y=select_columns2,
                     hue=select_hue, fill=select_fill_mode,
                     multiple=select_multiple_mode, main_title=select_main_title,
@@ -683,7 +689,9 @@ if 'df' in st.session_state:
                     ylabel_fontsize=select_ylabel_fontsize,
                     ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
                     figsize=(select_width, select_height), dpi=select_dpi
-                ))
+                )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="kde_plot.png", key="dl_kde_plot")
             with st.expander("boxplot"):
                 select_x = st.selectbox(
                     "please select column x",
@@ -729,17 +737,17 @@ if 'df' in st.session_state:
                 )
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize3")
-                st.pyplot(
-                    seaborn_chart.boxplot(
-                        data=df, x=select_x, y=select_y,
-                        hue=select_hue, saturation=select_saturation,
-                        fill=select_fill_mode, gap=select_gap, figsize=(select_width, select_height),
-                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
-                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
-                    )
+                fig = seaborn_chart.boxplot(
+                    data=df, x=select_x, y=select_y,
+                    hue=select_hue, saturation=select_saturation,
+                    fill=select_fill_mode, gap=select_gap, figsize=(select_width, select_height),
+                    dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                    ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                    ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
                 )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="boxplot.png", key="dl_boxplot")
 
             with st.expander("countplot"):
                 select_x = st.selectbox(
@@ -805,20 +813,20 @@ if 'df' in st.session_state:
                 )
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize4")
-                st.pyplot(
-                    seaborn_chart.countplot(
-                        data=df, x=select_x, y=select_y,
-                        hue=select_hue, stat=select_stat,
-                        saturation=select_saturation, orient=select_orient,
-                        width=select_width_plot, log_scale=select_log_scale,
-                        dpi=select_dpi, figsize=(select_width, select_height),
-                        main_title=select_main_title, xlabel=select_xlabel,
-                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
-                        fill=select_fill_mode, gap=select_gap
-                    )
+                fig = seaborn_chart.countplot(
+                    data=df, x=select_x, y=select_y,
+                    hue=select_hue, stat=select_stat,
+                    saturation=select_saturation, orient=select_orient,
+                    width=select_width_plot, log_scale=select_log_scale,
+                    dpi=select_dpi, figsize=(select_width, select_height),
+                    main_title=select_main_title, xlabel=select_xlabel,
+                    ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                    ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                    fill=select_fill_mode, gap=select_gap
                 )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="countplot.png", key="dl_countplot")
 
             with st.expander("scatterplot"):
                 select_x = st.selectbox(
@@ -869,16 +877,16 @@ if 'df' in st.session_state:
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize5")
 
-                st.pyplot(
-                    seaborn_chart.scatterplot(
-                        data=df, x=select_x, y=select_y, hue=select_hue, s=select_size_point, size=select_size,
-                        style=select_style, figsize=(select_width, select_height),
-                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
-                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                        ax_mode=select_ax_mode, ax_fontsize=select_ax_fontsize
-                    )
+                fig = seaborn_chart.scatterplot(
+                    data=df, x=select_x, y=select_y, hue=select_hue, s=select_size_point, size=select_size,
+                    style=select_style, figsize=(select_width, select_height),
+                    dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                    ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                    ax_mode=select_ax_mode, ax_fontsize=select_ax_fontsize
                 )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="scatterplot.png", key="dl_scatterplot")
 
             with st.expander("violin plot"):
                 select_x = st.selectbox(
@@ -923,16 +931,16 @@ if 'df' in st.session_state:
                 )
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize6")
-                st.pyplot(
-                    seaborn_chart.violin_plot(
-                        data=df, x=select_x, y=select_y, hue=select_hue, gap=select_gap,
-                        fill=select_fill_mode, orient=select_orient, figsize=(select_width, select_height),
-                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
-                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
-                    )
+                fig = seaborn_chart.violin_plot(
+                    data=df, x=select_x, y=select_y, hue=select_hue, gap=select_gap,
+                    fill=select_fill_mode, orient=select_orient, figsize=(select_width, select_height),
+                    dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                    ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                    ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
                 )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="violin_plot.png", key="dl_violin_plot")
             with st.expander("lineplot"):
                 select_x = st.selectbox(
                     "please select x",
@@ -977,16 +985,16 @@ if 'df' in st.session_state:
                 )
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize7")
-                st.pyplot(
-                    seaborn_chart.lineplot(
-                        data=df, x=select_x, y=select_y, hue=select_hue, style=select_style,
-                        size=select_size, sort=select_sort, figsize=(select_width, select_height),
-                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
-                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
-                    )
+                fig = seaborn_chart.lineplot(
+                    data=df, x=select_x, y=select_y, hue=select_hue, style=select_style,
+                    size=select_size, sort=select_sort, figsize=(select_width, select_height),
+                    dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                    ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                    xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                    ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode
                 )
+                st.pyplot(fig)
+                download_matplotlib_figure(fig, file_name="lineplot.png", key="dl_lineplot")
 
             with st.expander("correlation heatmap"):
                 select_annot = st.selectbox(
@@ -1020,34 +1028,34 @@ if 'df' in st.session_state:
                 select_ax_fontsize = st.number_input(
                     "please enter axis fontsize", value=12, key="select_ax_fontsize8")
                 if select_fmt_mode == "Auto":
-                    st.pyplot(
-                        seaborn_chart.heatmap(
-                            data=EDA.all_correlation(data=df), annot=select_annot,
-                            figsize=(select_width, select_height),
-                            dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
-                            ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                            xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                            ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
-                            annot_kws={"size": select_size_annot}
+                    fig = seaborn_chart.heatmap(
+                        data=EDA.all_correlation(data=df), annot=select_annot,
+                        figsize=(select_width, select_height),
+                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                        annot_kws={"size": select_size_annot}
 
-                        )
                     )
+                    st.pyplot(fig)
+                    download_matplotlib_figure(fig, file_name="correlation_heatmap.png", key="dl_heatmap_auto")
                 else:
                     select_fmt = st.selectbox(
                         "please select fmt format",
                         options=[".1f", ".2f", ".3f", ".4f"], index=1, key="select_fmt"
                     )
-                    st.pyplot(
-                        seaborn_chart.heatmap(
-                            data=EDA.all_correlation(data=df), annot=select_annot, fmt=select_fmt,
-                            figsize=(select_width, select_height),
-                            dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
-                            ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
-                            xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
-                            ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
-                            annot_kws={"size": select_size_annot}
-                        )
+                    fig = seaborn_chart.heatmap(
+                        data=EDA.all_correlation(data=df), annot=select_annot, fmt=select_fmt,
+                        figsize=(select_width, select_height),
+                        dpi=select_dpi, main_title=select_main_title, xlabel=select_xlabel,
+                        ylabel=select_ylabel, main_title_fontsize=select_main_title_fontsize,
+                        xlabel_fontsize=select_xlabel_fontsize, ylabel_fontsize=select_ylabel_fontsize,
+                        ax_fontsize=select_ax_fontsize, ax_mode=select_ax_mode,
+                        annot_kws={"size": select_size_annot}
                     )
+                    st.pyplot(fig)
+                    download_matplotlib_figure(fig, file_name="correlation_heatmap.png", key="dl_heatmap_manual")
         elif select_plot_mode == "interactive":
             with st.expander("scatter plot"):
                 select_x = st.selectbox(

@@ -850,10 +850,19 @@ class EDA:
     EDA.check_date_object : Method used to identify date-like columns
     pandas.to_datetime : Underlying conversion function used
         """
-        ch, data_col = EDA.check_date_object(data=data)
-        if ch:
+        result = EDA.check_date_object(data=data)
+
+        # Bug fix: `check_date_object` returns either `False` (a single bool)
+        # or a `(True, column_name)` tuple depending on what it finds. The
+        # original code did `ch, data_col = EDA.check_date_object(...)`
+        # unconditionally, which raises `TypeError: cannot unpack
+        # non-iterable bool object` whenever the result is plain `False`.
+        # We now check the type before unpacking.
+        if isinstance(result, tuple):
+            _, data_col = result
             data[data_col] = pd.to_datetime(data[data_col], errors="coerce")
-            return data
+
+        return data
 
     @classmethod
     def get_duplicate(cls, data: pd.DataFrame) -> int | bool:
@@ -1822,12 +1831,37 @@ class EDA:
 
     @classmethod
     def check_dtype_column(cls, data: pd.DataFrame | pd.Series, col: object) -> int:
+        """
+        Classify a column as categorical (0) or numeric (1) for filter UIs.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame or pandas.Series
+            The dataset containing ``col``.
+        col : object
+            Name of the column to classify.
+
+        Returns
+        -------
+        int
+            ``0`` if ``col`` has an ``object`` dtype, ``1`` otherwise
+            (numeric, boolean, datetime, etc.).
+
+        Notes
+        -----
+        Bug fix: the previous implementation only checked membership in
+        ``select_dtypes(include=["object"])`` and
+        ``select_dtypes(include=["number"])`` and fell through to an
+        implicit ``return None`` for any other dtype (e.g. ``bool`` or
+        ``datetime64``). Callers compare the result with ``== 0`` to decide
+        between a text filter and a numeric filter, so a bare ``None``
+        silently took the numeric branch — which broke for a boolean or
+        datetime column. Non-object dtypes now explicitly return ``1``.
+        """
         category = data.select_dtypes(include=["object"])
-        numeric = data.select_dtypes(include=["number"])
         if col in category:
             return 0
-        elif col in numeric:
-            return 1
+        return 1
 
     @classmethod
     def select_manual_data(
@@ -2320,6 +2354,45 @@ class handle_MissingValue:
     def fill_SimpleImputer(
             cls, x: pd.DataFrame | pd.Series = None, strategy="mean", fill=0
     ) -> pd.Series | pd.DataFrame:
+        """
+        Impute missing values with scikit-learn's ``SimpleImputer``.
+
+        Parameters
+        ----------
+        x : pandas.DataFrame or pandas.Series
+            Data to impute. Note that ``SimpleImputer`` expects 2D input,
+            so a Series should be passed as ``df[["col"]]`` rather than
+            ``df["col"]`` if you need a DataFrame back.
+        strategy : {"mean", "median", "most_frequent", "constant"}, default="mean"
+            Imputation strategy. ``"mean"``/``"median"`` only work on
+            numeric columns; use ``"most_frequent"`` or ``"constant"`` for
+            categorical data.
+        fill : Any, default=0
+            The value used to fill missing entries when
+            ``strategy="constant"``; ignored otherwise.
+
+        Returns
+        -------
+        numpy.ndarray
+            The imputed data, as returned by
+            ``SimpleImputer.fit_transform``.
+
+        Notes
+        -----
+        This method is fully implemented but not currently wired into any
+        Streamlit page — the EDA page only offers row/column deletion for
+        missing values. See the README's "Suggested next features" for how
+        to surface it in the UI.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'A': [1.0, None, 3.0]})
+        >>> handle_MissingValue.fill_SimpleImputer(df, strategy="mean")
+        array([[1.],
+               [2.],
+               [3.]])
+        """
         if strategy == "constant":
             imputer = SimpleImputer(strategy="constant", fill_value=fill)
             x_filled = imputer.fit_transform(X=x)
@@ -2620,6 +2693,15 @@ class handle_outliers:
 
 
 class data_manipulation:
+    """
+    Row/column deletion, renaming and dtype-casting helpers.
+
+    Every method here returns a **new** DataFrame (none mutate ``data`` in
+    place) and raises ``ValueError`` when the requested row index /
+    column name doesn't exist, which the Streamlit pages catch and show
+    via ``st.error``.
+    """
+
     @classmethod
     def delete_row(
             cls, data: pd.DataFrame, row_index: int | object | pd.Series = None
@@ -2725,6 +2807,27 @@ class data_manipulation:
     def delete_rows(
             cls, data: pd.DataFrame, rows_index: tuple[int, int] = None
     ) -> pd.DataFrame | None | Exception:
+        """
+        Delete an inclusive range of rows by integer index.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The input DataFrame.
+        rows_index : tuple[int, int]
+            ``(start, end)`` — both ends are deleted (inclusive), e.g.
+            ``(0, 2)`` drops index labels ``0, 1, 2``.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A new DataFrame with the range removed and the index reset.
+
+        Raises
+        ------
+        ValueError
+            If any index in the range is not present in ``data.index``.
+        """
         start, end = rows_index
         indices_to_drop = list(range(start, end + 1))
         if not all(i in data.index for i in indices_to_drop):
@@ -2733,6 +2836,7 @@ class data_manipulation:
 
     @classmethod
     def delete_column(cls, data: pd.DataFrame, col: str | pd.Series | object) -> pd.DataFrame | Exception:
+        """Drop a single column; raises ``ValueError`` if ``col`` doesn't exist."""
         if col in data.columns:
             return data.drop(columns=col)
         else:
@@ -2740,6 +2844,7 @@ class data_manipulation:
 
     @classmethod
     def delete_columns(cls, data: pd.DataFrame, list_col: list[str] | object) -> pd.DataFrame:
+        """Drop multiple columns; raises ``ValueError`` listing any names not found."""
         missing_cols = [col for col in list_col if col not in data.columns]
         if missing_cols:
             raise ValueError(f"Columns not found: {', '.join(missing_cols)}")
@@ -2750,12 +2855,37 @@ class data_manipulation:
             cls, data: pd.DataFrame, col_name_last: str | object,
             col_name_new: str | object
     ) -> pd.DataFrame:
+        """Rename one column (``col_name_last`` -> ``col_name_new``); raises if it doesn't exist."""
         return data.rename(columns={col_name_last: col_name_new}, errors="raise")
 
     @classmethod
     def change_dtype(
             cls, data: pd.DataFrame, col: str | object, dtype: str | object | np.dtype
     ) -> pd.DataFrame:
+        """
+        Cast a single column to a new dtype on a copy of ``data``.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The input DataFrame (not modified in place).
+        col : str
+            Column to cast.
+        dtype : str or numpy.dtype
+            Target dtype, e.g. ``"float64"``, ``"category"``, ``"int32"``.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A copy of ``data`` with ``col`` cast to ``dtype``.
+
+        Raises
+        ------
+        ValueError
+            If ``col`` is not a column of ``data``, or if the cast itself
+            fails (e.g. non-numeric strings cast to ``int``) — the
+            underlying exception message is included.
+        """
         if col in data.columns:
             try:
                 data_copy = data.copy()

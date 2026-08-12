@@ -387,6 +387,28 @@ if 'df' in st.session_state:
 
                         st.dataframe(metrics_df)
 
+                        # New feature: visualize the clusters (previously
+                        # `MetricPlot.clustering_visualization` was an
+                        # unimplemented stub, so clustering results had no
+                        # plot at all — only the metrics table above).
+                        with st.expander("Show Cluster Visualization", expanded=True):
+                            # Note: DBSCAN has no `.predict` method (only
+                            # `fit_predict`), so we read the labels that
+                            # `clustering_report`'s internal `fit_predict`
+                            # already assigned, rather than calling
+                            # `pipeline.predict(X)` (which would crash for
+                            # DBSCAN).
+                            cluster_labels = pipeline.named_steps["model"].labels_
+                            X_transformed = pipeline.named_steps["prep"].transform(X)
+
+                            st.plotly_chart(
+                                MetricPlot.clustering_visualization(
+                                    X=X_transformed,
+                                    labels=cluster_labels
+                                ),
+                                use_container_width=True
+                            )
+
                     # ==================================
                     # Classification / Regression
                     # ==================================
@@ -402,7 +424,7 @@ if 'df' in st.session_state:
                         X_train, X_test, y_train, y_test = (
                             DataPreprocessor.set_setting_split(
                                 x=X,
-                                y=y.ravel(),
+                                y=y.to_numpy().ravel(),  # bug fix: pandas Series has no .ravel() on modern pandas
                                 test_size=select_test_size / 100,
                                 stratify=select_stratify
                             )
@@ -531,7 +553,7 @@ if 'df' in st.session_state:
                                     MetricPlot.plot_learning_curve(
                                         pipeline=pipeline,
                                         X=X,
-                                        y=y.ravel(),
+                                        y=y.to_numpy().ravel(),  # bug fix: pandas Series has no .ravel() on modern pandas
                                         cv=5,
                                         scoring="accuracy"
                                     )
@@ -564,7 +586,7 @@ if 'df' in st.session_state:
                                     MetricPlot.plot_learning_curve(
                                         pipeline=pipeline,
                                         X=X,
-                                        y=y.ravel(),
+                                        y=y.to_numpy().ravel(),  # bug fix: pandas Series has no .ravel() on modern pandas
                                         cv=5
                                     )
                                 )

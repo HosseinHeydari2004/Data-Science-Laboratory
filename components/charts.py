@@ -988,7 +988,8 @@ class seaborn_chart:
         """
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         sns.lineplot(
-            data=data, x=x, y=y, hue=hue, size=size, style=style, sort=sort
+            data=data, x=x, y=y, hue=hue, size=size, style=style, sort=sort, markers=True
+
         )
         ax.set_title(label=main_title, fontsize=main_title_fontsize)
         ax.set_xlabel(xlabel, fontsize=xlabel_fontsize)
@@ -1085,6 +1086,16 @@ class seaborn_chart:
 
 
 class plotly_charts:
+    """
+    This class contains functions for building interactive Plotly charts.
+
+    Mirrors :class:`seaborn_chart`'s API shape (one classmethod per chart
+    type, DataFrame/Series in, a ready-to-render figure out) but returns
+    ``plotly.graph_objs.Figure`` objects instead of static Matplotlib
+    figures, so callers get zoom/pan/hover for free (used throughout the
+    EDA page's chart pickers).
+    """
+
     @classmethod
     def scatterplot(
             cls, data: pd.DataFrame | pd.Series = None, x: pd.Series = None,
@@ -1696,13 +1707,13 @@ class plotly_charts:
     pandas.DataFrame.plot : Pandas built-in line plot method (non-interactive).
     matplotlib.pyplot.plot : Matplotlib line plot for static visualizations.
         """
-        x_sorted = x
-        y_sorted = y
-        if isinstance(x, str) and isinstance(x, str):
-            x_sorted = data[x].sort_values()
-            y_sorted = data[y].sort_values()
+        # x_sorted = x
+        # y_sorted = y
+        # if isinstance(x, str) and isinstance(x, str):
+        #     x_sorted = data[x].sort_values()
+        #     y_sorted = data[y].sort_values()
         fig = px.line(
-            data_frame=data, x=x_sorted, y=y_sorted,
+            data_frame=data, x=x, y=y,
             color=color, hover_data=hover_data, log_x=log_x,
             log_y=log_y, width=figsize[0], height=figsize[1]
         )

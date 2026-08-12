@@ -1,5 +1,8 @@
-.idea/
-Core/__pycache__/
-test
-components/__pycache__/
-Untils/__pycache__/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ruff_cache/
+Data/
+*.joblib
+.streamlit/secrets.toml

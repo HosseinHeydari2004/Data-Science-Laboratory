@@ -1,15 +1,15 @@
-pandas==2.2.3
-numpy==2.3.5
-streamlit==1.54.0
-scipy==1.16.3
-matplotlib==3.10.0
-plotly==6.2.0
-seaborn==0.13.2
-scikit-learn==1.8.0
-shap==0.50.0
-joblib==1.5.3
-category-encoders
-lightgbm==4.6.0
-xgboost==2.1.4
+# ML_Lablator dependencies
+# Generated after refactor testing on 2026-08-09.
+# Install with: pip install -r requirements.txt
 
-
+streamlit>=1.61
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.5
+scipy>=1.13
+seaborn>=0.13
+matplotlib>=3.9
+plotly>=5.24
+lightgbm>=4.5
+xgboost>=2.1
+joblib>=1.4

@@ -14,8 +14,25 @@ from sklearn.preprocessing import (
 
 
 class DataPreprocessor:
+    """
+    Build the scikit-learn preprocessing pipeline for the modeling page.
+
+    Given the list of numeric and categorical column names, this class
+    assembles a ``ColumnTransformer`` that scales numeric features and
+    encodes categorical ones (with optional imputation for either), plus a
+    couple of small helpers for train/test splitting and building a
+    human-readable configuration summary table.
+
+    Parameters
+    ----------
+    num_cols : list[str]
+        Names of the numeric feature columns.
+    cat_cols : list[str]
+        Names of the categorical feature columns.
+    """
 
     def __init__(self, num_cols: list, cat_cols: list):
+        """Store the numeric/categorical column names used by every other method."""
         self.num_cols = num_cols
         self.cat_cols = cat_cols
 
@@ -27,6 +44,37 @@ class DataPreprocessor:
             cat_impute_strategy: str = "most_frequent",
             encoder_feature_type: str = "One Hot Encoder"
     ) -> ColumnTransformer:
+        """
+        Assemble a ``ColumnTransformer`` for the configured columns.
+
+        Parameters
+        ----------
+        scaler_type : {"Standard Scaler", "MinMax Scaler", "Robust Scaler"}
+            Which scikit-learn scaler to apply to ``num_cols``.
+        impute : bool, default=False
+            Whether to add an imputation step before scaling/encoding.
+        num_impute_strategy : str, default="mean"
+            Strategy passed to ``SimpleImputer`` for numeric columns
+            (used only when ``impute=True``).
+        cat_impute_strategy : str, default="most_frequent"
+            Strategy passed to ``SimpleImputer`` for categorical columns
+            (used only when ``impute=True``).
+        encoder_feature_type : {"One Hot Encoder", "Ordinal Encoder"}
+            Which encoder to apply to ``cat_cols``.
+
+        Returns
+        -------
+        sklearn.compose.ColumnTransformer
+            Ready to be embedded as the ``"prep"`` step of a
+            ``ModelPipelineBuilder`` pipeline.
+
+        Raises
+        ------
+        ValueError
+            If ``scaler_type`` is not recognized, or if there are
+            categorical columns but ``encoder_feature_type`` is not
+            recognized.
+        """
 
         # =========================
         # Scalers
@@ -129,6 +177,24 @@ class DataPreprocessor:
             test_size: float = 0.2,
             stratify: bool = False,
     ) -> tuple[DataFrame, DataFrame, Series, Series]:
+        """
+        Wrapper around ``sklearn.model_selection.train_test_split``.
+
+        Parameters
+        ----------
+        x, y : array-like
+            Features and target to split.
+        test_size : float, default=0.2
+            Fraction of the data reserved for the test set.
+        stratify : bool, default=False
+            If True, splits are stratified by ``y`` (classification only).
+
+        Returns
+        -------
+        tuple
+            ``(x_train, x_test, y_train, y_test)``, with a fixed
+            ``random_state=42`` for reproducibility.
+        """
 
         if stratify:
             x_train, x_test, y_train, y_test = train_test_split(
@@ -167,6 +233,34 @@ class DataPreprocessor:
             cross_validation: bool = False,
             cv_folds: int | None = None
     ) -> DataFrame:
+        """
+        Build a two-column (``component``/``value``) summary table.
+
+        This is purely a display helper used by the "configuration
+        summary" expander on the modeling page; every argument is optional
+        and simply gets echoed back (with light formatting) into the
+        output table so the user can review their choices before training.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame, optional
+            The full dataset, used only to compute the class distribution
+            when ``task_type == "classification"``.
+        model_name, task_type, target_col, scaler_type, encoder_feature_type,
+        num_impute_strategy, cat_impute_strategy : str, optional
+            Human-readable labels echoed into the summary.
+        test_size, train_size : float, optional
+            Split ratios, rendered as percentages.
+        stratify, impute, cross_validation : bool, optional
+            Flags echoed into the summary.
+        n_train, n_test, cv_folds : int, optional
+            Row counts / fold counts echoed into the summary.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A two-column DataFrame with one row per configuration item.
+        """
         if task_type == "classification":
             class_counts = data[target_col].value_counts().sort_index()
             class_distribution_str = " | ".join(
@@ -178,7 +272,12 @@ class DataPreprocessor:
         num_val = ", ".join(self.num_cols) if self.num_cols else np.nan
         cat_val = ", ".join(self.cat_cols) if self.cat_cols else np.nan
 
-        data = {
+        # Note: this used to be named `data`, shadowing the `data`
+        # parameter above. It happened to work (Python evaluates the RHS
+        # dict literal, including `len(data)` below, before rebinding the
+        # name) but was confusing and fragile to future edits, so it is
+        # now named `config_rows`.
+        config_rows = {
             "component": [
                 "target_column",
                 "class_distribution_str",
@@ -206,8 +305,8 @@ class DataPreprocessor:
                 cat_val,
                 n_train,
                 n_test,
-                f"{train_size * 100:.0f}%" if task_type != "clustering" else len(data),
-                f"{test_size * 100:.0f}%" if task_type != "clustering" else None ,
+                f"{train_size * 100:.0f}%" if task_type != "clustering" else len(data) if data is not None else None,
+                f"{test_size * 100:.0f}%" if task_type != "clustering" else None,
                 stratify if task_type != "clustering" else None,
                 task_type,
                 model_name,
@@ -221,4 +320,4 @@ class DataPreprocessor:
             ]
         }
 
-        return DataFrame(data)
+        return DataFrame(config_rows)

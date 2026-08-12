@@ -34,6 +34,35 @@ from xgboost import XGBRegressor
 
 
 class ModelPipelineBuilder:
+    """
+    Build a scikit-learn compatible ``Pipeline`` for a supported model.
+
+    This class centralizes two pieces of static knowledge used across the
+    app:
+
+    - ``MODEL_FACTORY`` maps a human-readable model name (as shown in the
+      Streamlit selectbox) to the scikit-learn/XGBoost/LightGBM estimator
+      class that implements it.
+    - ``MODEL_INFO`` maps that same model name to its task type
+      (``"classification"``, ``"regression"`` or ``"clustering"``), which
+      the rest of the app uses to decide which metrics/plots to show.
+
+    An instance wraps a fitted-or-unfitted ``ColumnTransformer`` (the
+    preprocessing step) and exposes :meth:`build_pipeline` to combine it
+    with a freshly constructed estimator into a single ``Pipeline`` with
+    the steps ``("prep", preprocessor)`` and ``("model", estimator)``.
+
+    Examples
+    --------
+    >>> from sklearn.compose import ColumnTransformer
+    >>> builder = ModelPipelineBuilder(preprocessor=some_column_transformer)
+    >>> pipe = builder.build_pipeline(
+    ...     model_type="Random Forest",
+    ...     model_params={"n_estimators": 200, "max_depth": 8}
+    ... )
+    >>> pipe.fit(X_train, y_train)
+    """
+
     MODEL_FACTORY = {
         "Linear Regression": LinearRegression,
         "Ridge Regression": Ridge,
@@ -105,6 +134,14 @@ class ModelPipelineBuilder:
     }
 
     def __init__(self, preprocessor: ColumnTransformer):
+        """
+        Parameters
+        ----------
+        preprocessor : sklearn.compose.ColumnTransformer
+            A (typically unfitted) transformer produced by
+            ``DataPreprocessor.get_transformer`` that will become the
+            ``"prep"`` step of the resulting pipeline.
+        """
         self.preprocessor: ColumnTransformer = preprocessor
 
     @classmethod
@@ -114,6 +151,27 @@ class ModelPipelineBuilder:
             model_params: dict | None = None
     ):
 
+        """
+        Instantiate the estimator registered under ``model_type``.
+
+        Parameters
+        ----------
+        model_type : str
+            Key into :attr:`MODEL_FACTORY`, e.g. ``"Random Forest"``.
+        model_params : dict, optional
+            Keyword arguments forwarded to the estimator's constructor
+            (typically the output of ``ModelParameterFactory.get_params``).
+
+        Returns
+        -------
+        BaseEstimator
+            A new, unfitted estimator instance.
+
+        Raises
+        ------
+        ValueError
+            If ``model_type`` is not a key of :attr:`MODEL_FACTORY`.
+        """
         if model_params is None:
             model_params = {}
 
@@ -131,7 +189,22 @@ class ModelPipelineBuilder:
             model_type: str,
             model_params: dict | None = None
     ) -> Pipeline:
+        """
+        Build the full preprocessing + model pipeline.
 
+        Parameters
+        ----------
+        model_type : str
+            Key into :attr:`MODEL_FACTORY`.
+        model_params : dict, optional
+            Hyperparameters passed to :meth:`get_model`.
+
+        Returns
+        -------
+        sklearn.pipeline.Pipeline
+            A two-step pipeline: ``("prep", preprocessor)`` followed by
+            ``("model", estimator)``.
+        """
         model = self.get_model(
             model_type=model_type,
             model_params=model_params
@@ -144,8 +217,26 @@ class ModelPipelineBuilder:
 
 
 class ModelParameterFactory:
+    """
+    A collection of Streamlit hyperparameter forms, one per supported model.
+
+    Every method below renders a small set of ``st.slider``/``st.selectbox``/
+    ``st.checkbox`` widgets for one model's most relevant hyperparameters and
+    returns them as a ``dict`` ready to be unpacked into the corresponding
+    scikit-learn/XGBoost/LightGBM estimator (e.g. ``RandomForestClassifier
+    (**params)``). :attr:`PARAMS_FACTORY` maps the model's display name
+    (matching :attr:`ModelPipelineBuilder.MODEL_FACTORY`) to the function
+    that should render its form, and :meth:`get_params` is the single entry
+    point the pages call.
+
+    Because each method calls Streamlit widget functions directly, these
+    methods must be called during a Streamlit script run (they have the
+    side effect of rendering widgets) and return a plain ``dict`` of the
+    current widget values.
+    """
     @staticmethod
     def k_means():
+        """Hyperparameter form for sklearn.cluster.KMeans (n_clusters, init, n_init, max_iter). Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_clusters": st.slider(
                 "select n_clusters", value=2, max_value=12, min_value=2, key="9jm3"
@@ -165,6 +256,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def dbscan():
+        """Hyperparameter form for sklearn.cluster.DBSCAN (eps, min_samples, metric). Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "eps": st.slider(
                 "select eps",
@@ -191,6 +283,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def logistic_regression():
+        """Hyperparameter form for sklearn.linear_model.LogisticRegression. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "C": st.number_input(
                 "enter C", value=1.0
@@ -200,8 +293,11 @@ class ModelParameterFactory:
                 value=100, max_value=1000, min_value=30
             ),
             "l1_ratio": st.slider(
-                "enter l1 ratio",
-                value=0.0, min_value=0.0, max_value=20.0
+                # Bug fix: scikit-learn requires l1_ratio in [0.0, 1.0];
+                # the previous max_value=20.0 let users pick invalid values
+                # that raised `ValueError` as soon as training started.
+                "enter l1 ratio", value=0.0, min_value=0.0, max_value=1.0,
+                help="Only used when penalty='elasticnet' and solver='saga'."
             ),
             "solver": st.selectbox(
                 "select solver",
@@ -222,6 +318,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def random_forest():
+        """Hyperparameter form for sklearn.ensemble.RandomForestClassifier. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "enter n estimators",
@@ -259,6 +356,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def linear_regression():
+        """Hyperparameter form for sklearn.linear_model.LinearRegression (has no tunable params exposed). Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "fit_intercept": st.checkbox(
                 "fit_intercept", value=True
@@ -267,6 +365,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def ridge():
+        """Hyperparameter form for sklearn.linear_model.Ridge. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "alpha": st.slider(
                 "enter alpha",
@@ -294,6 +393,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def lasso():
+        """Hyperparameter form for sklearn.linear_model.Lasso. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "alpha": st.slider(
                 "Enter alpha",
@@ -314,6 +414,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def elasticnet():
+        """Hyperparameter form for sklearn.linear_model.ElasticNet. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "alpha": st.slider(
                 "Enter alpha",
@@ -331,13 +432,14 @@ class ModelParameterFactory:
                 ], index=0
             ),
             "l1_ratio": st.slider(
-                "enter L1 ratio",
-                value=0.0, min_value=0.0, max_value=20.0
+                # Bug fix: ElasticNet requires l1_ratio in [0.0, 1.0].
+                "enter L1 ratio", value=0.0, min_value=0.0, max_value=1.0
             )
         }
 
     @staticmethod
     def random_forest_regressor():
+        """Hyperparameter form for sklearn.ensemble.RandomForestRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "enter n estimators",
@@ -375,6 +477,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def gradient_boosting_regressor():
+        """Hyperparameter form for sklearn.ensemble.GradientBoostingRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "loss": st.selectbox(
                 "select loss function",
@@ -432,6 +535,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def knn_regressor():
+        """Hyperparameter form for sklearn.neighbors.KNeighborsRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_neighbors": st.slider(
                 "select n_neighbors",
@@ -457,6 +561,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def lightgbm():
+        """Hyperparameter form for LightGBM (LGBMClassifier/LGBMRegressor share this form). Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "boosting_type": st.selectbox(
                 "select boosting type",
@@ -500,6 +605,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def Decision_Tree_regressor():
+        """Hyperparameter form for sklearn.tree.DecisionTreeRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "criterion": st.selectbox(
                 "select criterion",
@@ -546,6 +652,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def svr():
+        """Hyperparameter form for sklearn.svm.SVR. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "kernel": st.selectbox(
                 "select kernel",
@@ -579,6 +686,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def xgboost():
+        """Hyperparameter form for XGBoost (XGBClassifier/XGBRegressor share this form). Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "Enter n estimators",
@@ -604,6 +712,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def ExtraTree_regressor():
+        """Hyperparameter form for sklearn.ensemble.ExtraTreesRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "Enter n estimators",
@@ -634,6 +743,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def AdaBoost_regressor():
+        """Hyperparameter form for sklearn.ensemble.AdaBoostRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "Enter n estimators",
@@ -655,6 +765,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def Neural_Network_regressor():
+        """Hyperparameter form for sklearn.neural_network.MLPRegressor. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "loss": st.selectbox(
                 "Select loss",
@@ -685,8 +796,11 @@ class ModelParameterFactory:
                 ], index=2, key="0urw"
             ),
             "alpha": st.slider(
+                # Bug fix: an empty string key="" can collide with other
+                # unkeyed widgets and cause a StreamlitDuplicateElementId
+                # error; every widget now gets a unique, non-empty key.
                 "Enter alpha",
-                min_value=0.0001, max_value=10.0, value=0.0001, key=""
+                min_value=0.0001, max_value=10.0, value=0.0001, key="0nnr_alpha"
             ),
             "learning_rate": st.selectbox(
                 "Select learning rate",
@@ -711,6 +825,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def Knn():
+        """Hyperparameter form for sklearn.neighbors.KNeighborsClassifier. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_neighbors": st.slider(
                 "select n_neighbors",
@@ -736,6 +851,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def gaussian_naive_bayes():
+        """Hyperparameter form for sklearn.naive_bayes.GaussianNB. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "var_smoothing": st.number_input(
                 "Enter var smoothing",
@@ -745,6 +861,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def support_vector_machine():
+        """Hyperparameter form for sklearn.svm.SVC. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "kernel": st.selectbox(
                 "select kernel",
@@ -777,6 +894,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def decision_tree():
+        """Hyperparameter form for sklearn.tree.DecisionTreeClassifier. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "criterion": st.selectbox(
                 "select criterion",
@@ -822,6 +940,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def neural_network():
+        """Hyperparameter form for sklearn.neural_network.MLPClassifier. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "hidden_layer_sizes": st.slider(
                 "Enter hidden layer sizes",
@@ -871,6 +990,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def adaboost():
+        """Hyperparameter form for sklearn.ensemble.AdaBoostClassifier. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "Enter n estimators",
@@ -884,6 +1004,7 @@ class ModelParameterFactory:
 
     @staticmethod
     def extra_tree():
+        """Hyperparameter form for sklearn.ensemble.ExtraTreesClassifier. Called by ModelParameterFactory.get_params; renders widgets and returns the collected kwargs as a dict."""
         return {
             "n_estimators": st.slider(
                 "Enter n estimators",
@@ -945,13 +1066,37 @@ class ModelParameterFactory:
         "AdaBoost": adaboost,
         "XGBoost": xgboost,
         "LightGBM": lightgbm,
+        # Bug fix: "Extra Tree" (the classifier) was missing from this
+        # mapping even though its widget function `extra_tree` was already
+        # implemented above. Users who selected "Extra Tree" in the UI
+        # silently got an empty hyperparameter form (ModelParameterFactory
+        # .get_params fell through to `{}`) and the model always trained
+        # with scikit-learn defaults.
+        "Extra Tree": extra_tree,
         "K-Means": k_means,
         "DBSCAN": dbscan
 
     }
 
     @classmethod
-    def get_params(cls, model_name):
+    def get_params(cls, model_name: str) -> dict:
+        """
+        Render and collect the hyperparameter widgets for ``model_name``.
+
+        Parameters
+        ----------
+        model_name : str
+            Display name of the model, e.g. ``"Random Forest"``. Must be a
+            key of :attr:`PARAMS_FACTORY`.
+
+        Returns
+        -------
+        dict
+            The hyperparameters currently selected in the UI, ready to be
+            passed as ``**model_params`` to
+            ``ModelPipelineBuilder.get_model``. Returns an empty dict (and
+            renders no widgets) if ``model_name`` has no registered form.
+        """
         func = cls.PARAMS_FACTORY.get(model_name)
 
         if func is None:

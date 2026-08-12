@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.express as px
 import plotly.graph_objs as go
+from sklearn.decomposition import PCA
 from sklearn.metrics import auc, roc_curve
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import learning_curve
@@ -8,6 +9,14 @@ from sklearn.pipeline import Pipeline
 
 
 class MetricPlot:
+    """
+    Plotly figure builders used on the "Model Training" page.
+
+    Every method here takes a (fitted or fittable) scikit-learn ``Pipeline``
+    plus some data and returns a ready-to-render ``plotly.graph_objs.Figure``
+    — nothing is drawn to screen directly, so these can be reused outside
+    of Streamlit too (e.g. saved to HTML/PNG).
+    """
     @classmethod
     def plot_confusion_matrix(cls, pipeline: Pipeline, X_test, y_test):
         """
@@ -348,13 +357,43 @@ class MetricPlot:
 
         fig = go.Figure()
 
+        # Bug fix / new feature: `train_std` and `val_std` were already
+        # being computed but never used, so the learning curve gave no
+        # sense of how noisy each score was across folds. We now draw a
+        # shaded +/-1 std-dev band around each curve, which is the
+        # standard way to visualize this (matplotlib's own learning-curve
+        # example does the same with `fill_between`).
+        fig.add_trace(
+            go.Scatter(
+                x=np.concatenate([train_sizes, train_sizes[::-1]]),
+                y=np.concatenate([train_mean + train_std, (train_mean - train_std)[::-1]]),
+                fill="toself",
+                fillcolor="rgba(31,119,180,0.15)",
+                line=dict(color="rgba(255,255,255,0)"),
+                hoverinfo="skip",
+                showlegend=False
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=np.concatenate([train_sizes, train_sizes[::-1]]),
+                y=np.concatenate([val_mean + val_std, (val_mean - val_std)[::-1]]),
+                fill="toself",
+                fillcolor="rgba(255,127,14,0.15)",
+                line=dict(color="rgba(255,255,255,0)"),
+                hoverinfo="skip",
+                showlegend=False
+            )
+        )
+
         # Train Curve
         fig.add_trace(
             go.Scatter(
                 x=train_sizes,
                 y=train_mean,
                 mode="lines+markers",
-                name="Training Score"
+                name="Training Score",
+                line=dict(color="rgb(31,119,180)")
             )
         )
 
@@ -364,7 +403,8 @@ class MetricPlot:
                 x=train_sizes,
                 y=val_mean,
                 mode="lines+markers",
-                name="Validation Score"
+                name="Validation Score",
+                line=dict(color="rgb(255,127,14)")
             )
         )
 
@@ -387,5 +427,56 @@ class MetricPlot:
         return fig
 
     @classmethod
-    def clustering_visualization(cls):
-        pass
+    def clustering_visualization(cls, X, labels):
+        """
+        Visualize cluster assignments as a 2D scatter plot.
+
+        This was previously an empty stub (``pass``) — selecting K-Means or
+        DBSCAN on the Model Training page produced a metrics table but no
+        way to actually *see* the clusters. This implementation projects
+        ``X`` down to 2 dimensions with PCA (when it has more than 2
+        features) and colors each point by its cluster label, with
+        DBSCAN's noise points (label ``-1``) shown in gray.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The (already preprocessed/transformed) data that was clustered.
+        labels : array-like of shape (n_samples,)
+            Cluster label for each row of ``X``, e.g. the output of
+            ``pipeline.fit_predict(X)``.
+
+        Returns
+        -------
+        plotly.graph_objs.Figure
+            A 2D scatter plot, colored by cluster label. If ``X`` has more
+            than 2 columns, axes are the first two principal components
+            and are labeled with the fraction of variance they explain.
+        """
+        X = np.asarray(X)
+        labels = np.asarray(labels).astype(str)
+        labels = np.where(labels == "-1", "Noise", labels)
+
+        if X.shape[1] > 2:
+            pca = PCA(n_components=2, random_state=42)
+            coords = pca.fit_transform(X)
+            explained = pca.explained_variance_ratio_
+            x_label = f"PC1 ({explained[0]:.1%} variance)"
+            y_label = f"PC2 ({explained[1]:.1%} variance)"
+        else:
+            coords = X[:, :2]
+            x_label, y_label = "Feature 1", "Feature 2"
+
+        fig = px.scatter(
+            x=coords[:, 0],
+            y=coords[:, 1],
+            color=labels,
+            labels={"x": x_label, "y": y_label, "color": "Cluster"},
+            color_discrete_map={"Noise": "lightgray"}
+        )
+        fig.update_layout(
+            title=dict(text="Cluster Visualization", font=dict(size=24), x=0.35),
+            width=750,
+            height=600
+        )
+        return fig
